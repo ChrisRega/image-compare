@@ -1,0 +1,18 @@
+[package]
+name = "image-compare"
+version = "0.1.0"
+edition = "2021"
+authors = ["Christopher Regali <christopher.regali@vdop.org>"]
+
+[dependencies]
+thiserror = "1.0.30"
+image = "0.24"
+
+[dev-dependencies]
+async-trait = "0.1"
+cucumber = "0.13"
+tokio = { version = "1.17.0", features = ["macros", "rt-multi-thread", "time"] }
+
+[[test]]
+name = "compare"
+harness = false

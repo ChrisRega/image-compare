@@ -2,7 +2,7 @@ mod squared_error;
 mod ssim;
 mod utils;
 
-mod prelude {
+pub mod prelude {
     pub use image::{GrayImage, ImageBuffer, Luma};
     use thiserror::Error;
 
@@ -18,6 +18,8 @@ mod prelude {
     }
 
     pub type SimilarityImage = ImageBuffer<Luma<f32>, Vec<f32>>;
+
+    #[derive(Debug)]
     pub struct Similarity {
         pub image: SimilarityImage,
         pub score: f64,

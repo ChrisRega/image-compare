@@ -96,4 +96,24 @@ mod tests {
         assert_eq!(window.width(), 1);
         assert_eq!(window.area(), 1);
     }
+
+    #[test]
+    fn window_iterator_test() {
+        let window = Window::new((0, 0), (3, 2));
+        let mut iter = window.iter_pixels();
+
+        let next = iter.next().expect("iterator should work");
+        assert_eq!(next.0, 0);
+        assert_eq!(next.1, 0);
+
+        //expect column-first iteration
+        let next = iter.next().expect("iterator should work");
+        assert_eq!(next.0, 1);
+        assert_eq!(next.1, 0);
+
+        //row break works
+        let next = iter.nth(3).expect("iterator should work");
+        assert_eq!(next.0, 1);
+        assert_eq!(next.1, 1);
+    }
 }
