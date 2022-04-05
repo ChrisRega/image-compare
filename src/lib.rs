@@ -8,7 +8,7 @@ pub mod prelude {
 
     pub enum Algorithm {
         RootMeanSquared,
-        SSIMSimple,
+        MSSIMSimple,
     }
 
     #[derive(Error, Debug)]
@@ -34,6 +34,6 @@ pub fn similarity(
 ) -> Result<Similarity, CompareError> {
     match algorithm {
         Algorithm::RootMeanSquared => squared_error::root_mean_squared_error_simple(first, second),
-        Algorithm::SSIMSimple => ssim::ssim_simple(first, second),
+        Algorithm::MSSIMSimple => ssim::ssim_simple(first, second),
     }
 }
