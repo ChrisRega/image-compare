@@ -4,15 +4,20 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Christopher Regali <christopher.regali@vdop.org>"]
 license = "MIT"
+repository = "https://github.com/ChrisRega/image-compare"
+homepage = "https://github.com/ChrisRega/image-compare"
+documentation = "https://docs.rs/image-compare"
+readme = "README.md"
+categories = ["multimedia::images"]
 
 [dependencies]
-thiserror = "1.0.30"
+thiserror = "1.0"
 image = "0.24"
 
 [dev-dependencies]
 async-trait = "0.1"
 cucumber = "0.13"
-tokio = { version = "1.17.0", features = ["macros", "rt-multi-thread", "time"] }
+tokio = { version = "1.17", features = ["macros", "rt-multi-thread", "time"] }
 
 [[test]]
 name = "compare"
