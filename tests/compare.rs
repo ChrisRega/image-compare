@@ -26,7 +26,7 @@ fn load_images(world: &mut CompareWorld, first_image: String, second_image: Stri
 #[when(expr = "comparing the images using RMS")]
 fn compare_rms(world: &mut CompareWorld) {
     world.comparison_result = Some(
-        image_compare::similarity(
+        image_compare::gray_similarity(
             Algorithm::RootMeanSquared,
             world.first.as_ref().unwrap(),
             world.second.as_ref().unwrap(),
@@ -38,7 +38,7 @@ fn compare_rms(world: &mut CompareWorld) {
 #[when(expr = "comparing the images using MSSIM")]
 fn compare_mssim(world: &mut CompareWorld) {
     world.comparison_result = Some(
-        image_compare::similarity(
+        image_compare::gray_similarity(
             Algorithm::MSSIMSimple,
             world.first.as_ref().unwrap(),
             world.second.as_ref().unwrap(),

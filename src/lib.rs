@@ -27,7 +27,7 @@ pub mod prelude {
 }
 use prelude::*;
 
-pub fn similarity(
+pub fn gray_similarity(
     algorithm: Algorithm,
     first: &GrayImage,
     second: &GrayImage,
