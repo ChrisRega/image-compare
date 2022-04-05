@@ -17,13 +17,17 @@ pub fn root_mean_squared_error_simple(
             let diff = first.get_pixel(pixel.0, pixel.1)[0] as i32
                 - second.get_pixel(pixel.0, pixel.1)[0] as i32;
             let normalized = diff as f32 / u8::MAX as f32;
-            let squared = 1. - normalized.powi(2);
+            let squared_root = 1. - normalized.abs();
 
-            image.put_pixel(pixel.0, pixel.1, Luma([squared]))
+            image.put_pixel(pixel.0, pixel.1, Luma([squared_root]))
         });
 
     let score: f64 = 1.
-        - (image.pixels().map(|p| 1. - p[0] as f64).sum::<f64>() / (image.pixels().len() as f64))
+        - (image
+            .pixels()
+            .map(|p| (1. - p[0] as f64).powi(2))
+            .sum::<f64>()
+            / (image.pixels().len() as f64))
             .sqrt();
     Ok(Similarity { image, score })
 }
@@ -41,10 +45,7 @@ mod tests {
         second.fill(10);
         let comparison =
             root_mean_squared_error_simple(&first, &second).expect("Do not expect error here");
-        assert_eq!(
-            comparison.image.get_pixel(0, 0)[0],
-            1. - (100. / (255.0f32.powi(2)))
-        );
+        assert_eq!(comparison.image.get_pixel(0, 0)[0], 1. - (10. / (255.0f32)));
     }
 
     #[test]

@@ -2,10 +2,10 @@
 //! # Comparing images
 //! This crate allows to compare grayscale images
 //! The easiest use is loading two images, converting them to grayscale and running a comparison:
-//! ```rust, no_run
+//! ```no_run
 //! use image_compare::Algorithm;
-//! let image_one = image::open(first_image).expect("Could not find test-image").into_luma8();
-//! let image_two = image::open(second_image).expect("Could not find test-image").into_luma8();
+//! let image_one = image::open("image1.png").expect("Could not find test-image").into_luma8();
+//! let image_two = image::open("image2.png").expect("Could not find test-image").into_luma8();
 //! let result = image_compare::gray_similarity(Algorithm::MSSIMSimple, &image_one, &image_two).expect("Images had different dimensions");
 //! ```
 //!
