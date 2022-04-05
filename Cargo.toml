@@ -9,7 +9,7 @@ homepage = "https://github.com/ChrisRega/image-compare"
 documentation = "https://docs.rs/image-compare"
 readme = "README.md"
 categories = ["multimedia::images"]
-exclude = ["tests/data/*"]
+exclude = ["tests/data/*", ".github"]
 
 [dependencies]
 thiserror = "1.0"
