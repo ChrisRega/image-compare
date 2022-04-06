@@ -28,7 +28,7 @@ pub mod prelude {
     pub enum Algorithm {
         /// A simple RMSE implementation - will return: <img src="https://render.githubusercontent.com/render/math?math=1-\sqrt{\frac{(\sum_{x,y=0}^{x,y=w,h}\left(f(x,y)-g(x,y)\right)^2)}{w*h}}">
         RootMeanSquared,
-        /// a simple MSSIM implemenation - will run SSIM (implemented as on wikipedia) over 8x8 px windows and average the results
+        /// a simple MSSIM implementation - will run SSIM (implemented as on wikipedia) over 8x8 px windows and average the results
         MSSIMSimple,
     }
 
@@ -55,6 +55,8 @@ pub mod prelude {
     }
 
     pub trait ToGrayScale {
+        /// Clamps each input pixel to (0., 1.) and multiplies by 255 before converting to u8.
+        /// See tests/data/*_compare.png images for examples
         fn to_grayscale(&self) -> GrayImage;
     }
 
@@ -77,6 +79,9 @@ pub use prelude::Algorithm;
 pub use prelude::CompareError;
 #[doc(inline)]
 pub use prelude::Similarity;
+#[doc(inline)]
+pub use prelude::SimilarityImage;
+pub use prelude::ToGrayScale;
 use prelude::*;
 
 /// The current main function of the crate
