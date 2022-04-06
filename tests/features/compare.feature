@@ -20,7 +20,7 @@ Feature: Image comparison
     Examples:
       | compare_image                           | result              |
       | tests/data/pad_gaprao.png               | 1.0                 |
-      | tests/data/pad_gaprao_lighter.png       | 0.9468883561804494  |
-      | tests/data/pad_gaprao_noise.png         | 0.13375106098371664 |
-      | tests/data/pad_gaprao_gray_inverted.png | -0.662610652798606  |
+      | tests/data/pad_gaprao_lighter.png       | 0.946819217024122   |
+      | tests/data/pad_gaprao_noise.png         | 0.13399190797191077 |
+      | tests/data/pad_gaprao_gray_inverted.png | -0.6628818689878341 |
 

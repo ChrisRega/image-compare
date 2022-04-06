@@ -21,7 +21,8 @@ pub fn ssim_simple(first: &GrayImage, second: &GrayImage) -> Result<Similarity, 
         .into_iter()
         .map(|w| (ssim_for_window(first, second, &w), w))
         .collect::<Vec<_>>();
-    let score = results.iter().map(|r| r.0).sum::<f64>() / results.len() as f64;
+    let score = results.iter().map(|r| r.0 * r.1.area() as f64).sum::<f64>()
+        / results.iter().map(|r| r.1.area() as f64).sum::<f64>();
 
     results
         .iter()
