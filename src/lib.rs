@@ -53,6 +53,23 @@ pub mod prelude {
         /// the averaged resulting score
         pub score: f64,
     }
+
+    pub trait ToGrayScale {
+        fn to_grayscale(&self) -> GrayImage;
+    }
+
+    impl ToGrayScale for SimilarityImage {
+        fn to_grayscale(&self) -> GrayImage {
+            let mut img_gray = GrayImage::new(self.width(), self.height());
+            for row in 0..self.height() {
+                for col in 0..self.width() {
+                    let new_val = self.get_pixel(col, row)[0].clamp(0., 1.) * 255.;
+                    img_gray.put_pixel(col, row, Luma([new_val as u8]));
+                }
+            }
+            img_gray
+        }
+    }
 }
 #[doc(inline)]
 pub use prelude::Algorithm;

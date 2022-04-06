@@ -52,6 +52,25 @@ fn check_result_score(world: &mut CompareWorld, score: f64) {
     assert_eq!(world.comparison_result.as_ref().unwrap().score, score);
 }
 
+#[then(expr = "the similarity image matches {string}")]
+fn check_result_image(world: &mut CompareWorld, reference: String) {
+    let img = world
+        .comparison_result
+        .as_ref()
+        .unwrap()
+        .image
+        .to_grayscale();
+    let image_one = image::open(reference)
+        .expect("Could not find reference-image")
+        .into_luma8();
+    assert_eq!(
+        image_compare::gray_similarity(Algorithm::RootMeanSquared, &img, &image_one)
+            .expect("Could not compare")
+            .score,
+        1.0
+    );
+}
+
 #[async_trait(?Send)]
 impl World for CompareWorld {
     type Error = Infallible;

@@ -24,3 +24,13 @@ Feature: Image comparison
       | tests/data/pad_gaprao_noise.png         | 0.13399190797191077 |
       | tests/data/pad_gaprao_gray_inverted.png | -0.6628818689878341 |
 
+
+    Scenario: Comparing an image to the original with RMS and checking the difference image
+      Given the images 'tests/data/pad_gaprao.png' and 'tests/data/pad_gaprao_broken.png' are loaded
+      When comparing the images using RMS
+      Then the similarity image matches 'tests/data/pad_graparo_broken_rms_compare.png'
+
+    Scenario: Comparing an image to the original with MSSIM and checking the difference image
+      Given the images 'tests/data/pad_gaprao.png' and 'tests/data/pad_gaprao_broken.png' are loaded
+      When comparing the images using MSSIM
+      Then the similarity image matches 'tests/data/pad_graparo_broken_ssim_compare.png'
