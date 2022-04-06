@@ -1,4 +1,7 @@
 # image-compare
+[![Documentation](https://docs.rs/image-compare/badge.svg)](https://docs.rs/image-compare)
+![CI](https://github.com/ChrisRega/image-compare/actions/workflows/rust.yml/badge.svg?branch=main "CI")
+
 Simple image comparison in rust based on the image crate
 
 Note that this crate is heavily work in progress. Algorithms are neither cross-checked not particularly fast yet.
