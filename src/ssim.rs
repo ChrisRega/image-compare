@@ -9,12 +9,9 @@ const C1: f64 = (K1 * L as f64) * (K1 * L as f64);
 const C2: f64 = (K2 * L as f64) * (K2 * L as f64);
 
 pub fn ssim_simple(first: &GrayImage, second: &GrayImage) -> Result<Similarity, CompareError> {
-    if first.dimensions() != second.dimensions() {
-        return Err(CompareError::DimensionsDiffer);
-    }
     let dimension = first.dimensions();
     let mut image = SimilarityImage::new(dimension.0, dimension.1);
-    let window = Window::new((0, 0), (dimension.0 - 1, dimension.1 - 1));
+    let window = Window::from_image(first);
     let windows = window.subdivide_by_offset(DEFAULT_WINDOW_SIZE);
     let results = windows
         .into_iter()

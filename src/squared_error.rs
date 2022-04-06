@@ -6,21 +6,16 @@ pub fn root_mean_squared_error_simple(
     first: &GrayImage,
     second: &GrayImage,
 ) -> Result<Similarity, CompareError> {
-    if first.dimensions() != second.dimensions() {
-        return Err(CompareError::DimensionsDiffer);
-    }
     let dimension = first.dimensions();
     let mut image = SimilarityImage::new(dimension.0, dimension.1);
-    Window::new((0, 0), (dimension.0 - 1, dimension.1 - 1))
-        .iter_pixels()
-        .for_each(|pixel| {
-            let diff = first.get_pixel(pixel.0, pixel.1)[0] as i32
-                - second.get_pixel(pixel.0, pixel.1)[0] as i32;
-            let normalized = diff as f32 / u8::MAX as f32;
-            let squared_root = 1. - normalized.abs();
+    Window::from_image(first).iter_pixels().for_each(|pixel| {
+        let diff = first.get_pixel(pixel.0, pixel.1)[0] as i32
+            - second.get_pixel(pixel.0, pixel.1)[0] as i32;
+        let normalized = diff as f32 / u8::MAX as f32;
+        let squared_root = 1. - normalized.abs();
 
-            image.put_pixel(pixel.0, pixel.1, Luma([squared_root]))
-        });
+        image.put_pixel(pixel.0, pixel.1, Luma([squared_root]))
+    });
 
     let score: f64 = 1.
         - (image

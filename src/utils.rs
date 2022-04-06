@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use image::GrayImage;
 
 pub struct Window {
     pub top_left: (u32, u32),
@@ -67,6 +68,13 @@ impl Window {
             current_index: 0,
         }
     }
+
+    pub fn from_image(image: &GrayImage) -> Window {
+        Window {
+            top_left: (0, 0),
+            bottom_right: (image.width() - 1, image.height() - 1),
+        }
+    }
 }
 
 pub fn draw_window_to_image(window: &Window, image: &mut SimilarityImage, val: f32) {
@@ -123,5 +131,13 @@ mod tests {
         let windows = window.subdivide_by_offset(8);
         //all windows areas combined are the original area
         assert_eq!(windows.iter().map(|w| w.area()).sum::<u32>(), window.area());
+    }
+
+    #[test]
+    fn from_image_test() {
+        let img = GrayImage::new(127, 244);
+        let window = Window::from_image(&img);
+        assert_eq!(window.bottom_right.0, 126);
+        assert_eq!(window.bottom_right.1, 243);
     }
 }

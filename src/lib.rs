@@ -93,8 +93,24 @@ pub fn gray_similarity(
     first: &GrayImage,
     second: &GrayImage,
 ) -> Result<Similarity, CompareError> {
+    if first.dimensions() != second.dimensions() {
+        return Err(CompareError::DimensionsDiffer);
+    }
     match algorithm {
         Algorithm::RootMeanSquared => squared_error::root_mean_squared_error_simple(first, second),
         Algorithm::MSSIMSimple => ssim::ssim_simple(first, second),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn dimensions_differ_test() {
+        let first = GrayImage::new(1, 1);
+        let second = GrayImage::new(2, 2);
+        let result = gray_similarity(Algorithm::RootMeanSquared, &first, &second);
+        assert!(result.is_err());
     }
 }
