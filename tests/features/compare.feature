@@ -20,9 +20,9 @@ Feature: Image comparison
     Examples:
       | compare_image                           | result              |
       | tests/data/pad_gaprao.png               | 1.0                 |
-      | tests/data/pad_gaprao_lighter.png       | 0.946819217024122   |
-      | tests/data/pad_gaprao_noise.png         | 0.13399190797191077 |
-      | tests/data/pad_gaprao_gray_inverted.png | -0.6628818689878341 |
+      | tests/data/pad_gaprao_lighter.png       | 0.9465500206208791  |
+      | tests/data/pad_gaprao_noise.png         | 0.1260665609278695  |
+      | tests/data/pad_gaprao_gray_inverted.png | -0.6559340036804088 |
 
 
     Scenario: Comparing an image to the original with RMS and checking the difference image

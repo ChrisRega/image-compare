@@ -1,6 +1,5 @@
 use crate::prelude::*;
 use crate::utils::{draw_window_to_image, Window};
-use image::Primitive;
 
 const DEFAULT_WINDOW_SIZE: u32 = 8;
 const K1: f64 = 0.01;
@@ -52,30 +51,21 @@ fn covariance(
     window
         .iter_pixels()
         .map(|pixel| {
-            let pixel_x: f64 = image_x
-                .get_pixel_checked(pixel.0, pixel.1)
-                .unwrap_or(&Luma([mean_x as u8]))[0]
-                .into();
-            let pixel_y: f64 = image_y
-                .get_pixel_checked(pixel.0, pixel.1)
-                .unwrap_or(&Luma([mean_y as u8]))[0]
-                .into();
+            let pixel_x: f64 = image_x.get_pixel(pixel.0, pixel.1)[0].into();
+            let pixel_y: f64 = image_y.get_pixel(pixel.0, pixel.1)[0].into();
 
             (pixel_x - mean_x) * (pixel_y - mean_y)
         })
         .sum::<f64>()
 }
 
-fn mean<DataType>(image: &ImageBuffer<Luma<DataType>, Vec<DataType>>, window: &Window) -> f64
-where
-    DataType: Primitive + Into<f64> + From<u8>,
-{
+fn mean(image: &GrayImage, window: &Window) -> f64 {
     let mut result = 0.0;
     let mut area: usize = 0;
 
     window.iter_pixels().for_each(|pixel| {
         if let Some(pixel) = image.get_pixel_checked(pixel.0, pixel.1) {
-            result += pixel[0].into();
+            result += pixel[0] as f64;
             area += 1;
         }
     });

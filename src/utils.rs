@@ -52,8 +52,8 @@ impl Window {
                 result.push(Window::new(
                     (col, row),
                     (
-                        (col + offset).min(self.bottom_right.0),
-                        (row + offset).min(self.bottom_right.1),
+                        (col + offset - 1).min(self.bottom_right.0),
+                        (row + offset - 1).min(self.bottom_right.1),
                     ),
                 ))
             }
@@ -115,5 +115,13 @@ mod tests {
         let next = iter.nth(3).expect("iterator should work");
         assert_eq!(next.0, 1);
         assert_eq!(next.1, 1);
+    }
+
+    #[test]
+    fn window_subdivide_test() {
+        let window = Window::new((0, 0), (8, 7));
+        let windows = window.subdivide_by_offset(8);
+        //all windows areas combined are the original area
+        assert_eq!(windows.iter().map(|w| w.area()).sum::<u32>(), window.area());
     }
 }
