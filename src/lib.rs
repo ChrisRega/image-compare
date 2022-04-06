@@ -55,6 +55,8 @@ pub mod prelude {
     }
 
     pub trait ToGrayScale {
+        /// Clamps each input pixel to (0., 1.) and multiplies by 255 before converting to u8.
+        /// See tests/data/*_compare.png images for examples
         fn to_grayscale(&self) -> GrayImage;
     }
 
@@ -77,6 +79,9 @@ pub use prelude::Algorithm;
 pub use prelude::CompareError;
 #[doc(inline)]
 pub use prelude::Similarity;
+#[doc(inline)]
+pub use prelude::SimilarityImage;
+pub use prelude::ToGrayScale;
 use prelude::*;
 
 /// The current main function of the crate
