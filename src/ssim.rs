@@ -24,7 +24,10 @@ pub fn ssim_simple(first: &GrayImage, second: &GrayImage) -> Result<Similarity, 
         .iter()
         .for_each(|r| draw_window_to_image(&r.1, &mut image, r.0 as f32));
 
-    Ok(Similarity { image, score })
+    Ok(Similarity {
+        image: Some(image),
+        score,
+    })
 }
 
 fn ssim_for_window(first: &GrayImage, second: &GrayImage, window: &Window) -> f64 {

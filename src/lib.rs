@@ -15,6 +15,7 @@
 #![warn(unused_qualifications)]
 #![deny(deprecated)]
 
+mod histogram;
 mod squared_error;
 mod ssim;
 mod utils;
@@ -37,6 +38,8 @@ pub mod prelude {
     pub enum CompareError {
         #[error("The dimensions of the input images are not identical")]
         DimensionsDiffer,
+        #[error("Comparison calculation failed: {0}")]
+        CalculationFailed(String),
     }
 
     /// a single-channel f32 typed image containing a result-score for each pixel
@@ -45,11 +48,11 @@ pub mod prelude {
     #[derive(Debug)]
     /// A struct containing the results of a grayscale comparison
     pub struct Similarity {
-        /// Contains the resulting differences per pixel.
+        /// Contains the resulting differences per pixel if applicable
         /// The buffer will contain the resulting values of the respective algorithms:
         /// - RMS will be between 0. for all-white vs all-black and 1.0 for identical
         /// - SSIM usually is near 1. for similar, near 0. for different but can take on negative values for negative covariances
-        pub image: SimilarityImage,
+        pub image: Option<SimilarityImage>,
         /// the averaged resulting score
         pub score: f64,
     }
