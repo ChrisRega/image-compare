@@ -71,7 +71,7 @@ pub enum Metric {
     ChiSquare,
     /// <img src="https://render.githubusercontent.com/render/math?math=d(H_1,H_2) = \sum _I \min (H_1(I), H_2(I))">
     Intersection,
-    /// <img src="https://render.githubusercontent.com/render/math?math=d(H_1,H_2) = \sqrt{1 - \frac{1}{\sqrt{\bar{H_1} \bar{H_2}}} \sum_I \sqrt{H_1(I) \cdot H_2(I)}}">
+    /// <img src="https://render.githubusercontent.com/render/math?math=d(H_1,H_2) = \sqrt{1 - \frac{1}{\sqrt{\int{H_1} \int{H_2}}} \sum_I \sqrt{H_1(I) \cdot H_2(I)}}">
     /// Both histograms need to be normalizable
     Hellinger,
 }
