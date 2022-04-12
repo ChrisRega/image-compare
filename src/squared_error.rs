@@ -24,10 +24,7 @@ pub fn root_mean_squared_error_simple(
             .sum::<f64>()
             / (image.pixels().len() as f64))
             .sqrt();
-    Ok(Similarity {
-        image: Some(image),
-        score,
-    })
+    Ok(Similarity { image, score })
 }
 
 #[cfg(test)]
@@ -43,10 +40,7 @@ mod tests {
         second.fill(10);
         let comparison =
             root_mean_squared_error_simple(&first, &second).expect("Do not expect error here");
-        assert_eq!(
-            comparison.image.unwrap().get_pixel(0, 0)[0],
-            1. - (10. / (255.0f32))
-        );
+        assert_eq!(comparison.image.get_pixel(0, 0)[0], 1. - (10. / (255.0f32)));
     }
 
     #[test]
@@ -58,7 +52,7 @@ mod tests {
         second.fill(0);
         let comparison =
             root_mean_squared_error_simple(&first, &second).expect("Do not expect error here");
-        assert_eq!(comparison.image.unwrap().get_pixel(0, 0)[0], 1.);
+        assert_eq!(comparison.image.get_pixel(0, 0)[0], 1.);
         assert_eq!(comparison.score, 1.);
     }
 
@@ -71,7 +65,7 @@ mod tests {
         second.fill(255);
         let comparison =
             root_mean_squared_error_simple(&first, &second).expect("Do not expect error here");
-        assert_eq!(comparison.image.unwrap().get_pixel(0, 0)[0], 0.);
+        assert_eq!(comparison.image.get_pixel(0, 0)[0], 0.);
         assert_eq!(comparison.score, 0.);
     }
 

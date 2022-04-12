@@ -1,16 +1,25 @@
 #![crate_name = "image_compare"]
-//! # Comparing images
-//! This crate allows to compare grayscale images
+//! # Comparing gray images using structure
+//! This crate allows to compare grayscale images using either structure or histogramming methods.
 //! The easiest use is loading two images, converting them to grayscale and running a comparison:
 //! ```no_run
 //! use image_compare::Algorithm;
 //! let image_one = image::open("image1.png").expect("Could not find test-image").into_luma8();
 //! let image_two = image::open("image2.png").expect("Could not find test-image").into_luma8();
-//! let result = image_compare::gray_similarity(Algorithm::MSSIMSimple, &image_one, &image_two).expect("Images had different dimensions");
+//! let result = image_compare::gray_similarity_structure(Algorithm::MSSIMSimple, &image_one, &image_two).expect("Images had different dimensions");
 //! ```
-//!
 //! Check the [`Algorithm`] enum for implementation details
 //!
+//! # Comparing gray images using histogram
+//!
+//! Histogram comparisons are possible using the histogram comparison function
+//! ```no_run
+//! use image_compare::Metric;
+//! let image_one = image::open("image1.png").expect("Could not find test-image").into_luma8();
+//! let image_two = image::open("image2.png").expect("Could not find test-image").into_luma8();
+//! let result = image_compare::gray_similarity_histogram(Metric::Hellinger, &image_one, &image_two).expect("Images had different dimensions");
+//! ```
+//! //! Check the [`Metric`] enum for implementation details
 #![warn(missing_docs)]
 #![warn(unused_qualifications)]
 #![deny(deprecated)]
@@ -29,7 +38,7 @@ pub mod prelude {
     pub enum Algorithm {
         /// A simple RMSE implementation - will return: <img src="https://render.githubusercontent.com/render/math?math=1-\sqrt{\frac{(\sum_{x,y=0}^{x,y=w,h}\left(f(x,y)-g(x,y)\right)^2)}{w*h}}">
         RootMeanSquared,
-        /// a simple MSSIM implementation - will run SSIM (implemented as on wikipedia) over 8x8 px windows and average the results
+        /// a simple MSSIM implementation - will run SSIM (implemented as on wikipedia: <img src="https://render.githubusercontent.com/render/math?math=\mathrm{SSIM}(x,y)={\frac {(2\mu _{x}\mu _{y}+c_{1})(2\sigma _{xy}+c_{2})}{(\mu _{x}^{2}+\mu _{y}^{2}+c_{1})(\sigma _{x}^{2}+\sigma _{y}^{2}+c_{2})}}"> ) over 8x8 px windows and average the results
         MSSIMSimple,
     }
 
@@ -52,7 +61,7 @@ pub mod prelude {
         /// The buffer will contain the resulting values of the respective algorithms:
         /// - RMS will be between 0. for all-white vs all-black and 1.0 for identical
         /// - SSIM usually is near 1. for similar, near 0. for different but can take on negative values for negative covariances
-        pub image: Option<SimilarityImage>,
+        pub image: SimilarityImage,
         /// the averaged resulting score
         pub score: f64,
     }
@@ -77,6 +86,8 @@ pub mod prelude {
     }
 }
 #[doc(inline)]
+pub use histogram::Metric;
+#[doc(inline)]
 pub use prelude::Algorithm;
 #[doc(inline)]
 pub use prelude::CompareError;
@@ -87,7 +98,7 @@ pub use prelude::SimilarityImage;
 pub use prelude::ToGrayScale;
 use prelude::*;
 
-/// The current main function of the crate
+/// Comparing gray images using structure.
 ///
 /// # Arguments
 ///
@@ -96,7 +107,7 @@ use prelude::*;
 /// * `first` - The first of the images to compare
 ///
 /// * `second` - The first of the images to compare
-pub fn gray_similarity(
+pub fn gray_similarity_structure(
     algorithm: Algorithm,
     first: &GrayImage,
     second: &GrayImage,
@@ -110,6 +121,25 @@ pub fn gray_similarity(
     }
 }
 
+/// Comparing gray images using histogram
+/// # Arguments
+///
+/// * `metric` - The distance metric to use
+///
+/// * `first` - The first of the images to compare
+///
+/// * `second` - The first of the images to compare
+pub fn gray_similarity_histogram(
+    metric: Metric,
+    first: &GrayImage,
+    second: &GrayImage,
+) -> Result<f64, CompareError> {
+    if first.dimensions() != second.dimensions() {
+        return Err(CompareError::DimensionsDiffer);
+    }
+    histogram::img_compare(first, second, metric)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -118,7 +148,7 @@ mod tests {
     fn dimensions_differ_test() {
         let first = GrayImage::new(1, 1);
         let second = GrayImage::new(2, 2);
-        let result = gray_similarity(Algorithm::RootMeanSquared, &first, &second);
+        let result = gray_similarity_structure(Algorithm::RootMeanSquared, &first, &second);
         assert!(result.is_err());
     }
 }

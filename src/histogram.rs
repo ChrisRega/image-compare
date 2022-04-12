@@ -62,10 +62,17 @@ fn hellinger(first_hist: &Histogram, second_hist: &Histogram) -> Option<f64> {
     Some((1. - bc_normalized).sqrt())
 }
 
+/// The distance metric choices for histogram comparisons
 pub enum Metric {
+    /// <img src="https://render.githubusercontent.com/render/math?math=d(H_1,H_2) = \frac{\sum_I (H_1(I) - \bar{H_1}) (H_2(I) - \bar{H_2})}{\sqrt{\sum_I(H_1(I) - \bar{H_1})^2 \sum_I(H_2(I) - \bar{H_2})^2}}">
     Correlation,
+    /// <img src="https://render.githubusercontent.com/render/math?math=d(H_1,H_2) = \sum _I \frac{\left(H_1(I)-H_2(I)\right)^2}{H_1(I)}">
+    /// First histogram may not have empty bins
     ChiSquare,
+    /// <img src="https://render.githubusercontent.com/render/math?math=d(H_1,H_2) = \sum _I \min (H_1(I), H_2(I))">
     Intersection,
+    /// <img src="https://render.githubusercontent.com/render/math?math=d(H_1,H_2) = \sqrt{1 - \frac{1}{\sqrt{\bar{H_1} \bar{H_2}}} \sum_I \sqrt{H_1(I) \cdot H_2(I)}}">
+    /// Both histograms need to be normalizable
     Hellinger,
 }
 
@@ -73,7 +80,7 @@ pub fn img_compare(
     first: &GrayImage,
     second: &GrayImage,
     metric: Metric,
-) -> Result<Similarity, CompareError> {
+) -> Result<f64, CompareError> {
     let first_hist = Histogram::from_gray_image(first);
     let second_hist = Histogram::from_gray_image(second);
     let score = match metric {
@@ -95,7 +102,7 @@ pub fn img_compare(
             )
         })?,
     };
-    Ok(Similarity { image: None, score })
+    Ok(score)
 }
 
 struct Histogram {
@@ -126,6 +133,7 @@ impl Histogram {
         self.data.iter().sum()
     }
 
+    #[cfg(test)]
     pub fn from_vec(data: Vec<f64>) -> Option<Histogram> {
         if data.len() != 256 {
             None
