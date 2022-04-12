@@ -1,6 +1,6 @@
 Feature: Image comparison
 
-  Scenario Outline: Comparing an offset image to the original using RMS algorithm
+  Scenario Outline: Comparing a modified image to the original using RMS algorithm
     Given the images 'tests/data/pad_gaprao.png' and '<compare_image>' are loaded
     When comparing the images using RMS
     Then the similarity score is <result>
@@ -12,7 +12,7 @@ Feature: Image comparison
       | tests/data/pad_gaprao_noise.png         | 0.7512383697679271  |
       | tests/data/pad_gaprao_gray_inverted.png | 0.497502556580533   |
 
-  Scenario Outline: Comparing an offset image to the original using MSSIM algorithm
+  Scenario Outline: Comparing a modified image to the original using MSSIM algorithm
     Given the images 'tests/data/pad_gaprao.png' and '<compare_image>' are loaded
     When comparing the images using MSSIM
     Then the similarity score is <result>
