@@ -1,4 +1,4 @@
-Feature: Image comparison
+Feature: Gray image comparison using structure similarity
 
   Scenario Outline: Comparing a modified image to the original using RMS algorithm
     Given the images 'tests/data/pad_gaprao.png' and '<compare_image>' are loaded

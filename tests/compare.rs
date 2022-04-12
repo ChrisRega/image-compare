@@ -3,6 +3,7 @@ use std::convert::Infallible;
 use async_trait::async_trait;
 use cucumber::{given, then, when, World, WorldInit};
 use image_compare::prelude::*;
+use image_compare::Metric;
 extern crate image;
 
 // `World` is your shared, likely mutable state.
@@ -33,6 +34,26 @@ fn compare_rms(world: &mut CompareWorld) {
         )
         .expect("Error comparing the two images!"),
     );
+}
+
+#[when(expr = "comparing the images using histogram {string}")]
+fn compare_hist_corr(world: &mut CompareWorld, metric: String) {
+    let metric = match metric.as_str() {
+        "correlation" => Metric::Correlation,
+        "chisquare" => Metric::ChiSquare,
+        "intersection" => Metric::Intersection,
+        "hellinger distance" => Metric::Hellinger,
+        _ => panic!(),
+    };
+    world.comparison_result = Some(Similarity {
+        score: image_compare::gray_similarity_histogram(
+            metric,
+            world.first.as_ref().unwrap(),
+            world.second.as_ref().unwrap(),
+        )
+        .expect("Error comparing the two images!"),
+        image: SimilarityImage::new(1, 1),
+    });
 }
 
 #[when(expr = "comparing the images using MSSIM")]
@@ -86,5 +107,6 @@ impl World for CompareWorld {
 
 #[tokio::main]
 async fn main() {
-    CompareWorld::run("tests/features/compare.feature").await;
+    CompareWorld::run("tests/features/structure_gray.feature").await;
+    CompareWorld::run("tests/features/histogram_gray.feature").await;
 }
