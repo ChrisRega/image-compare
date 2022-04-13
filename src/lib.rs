@@ -92,6 +92,8 @@ pub mod prelude {
     }
 
     pub trait ToColorMap {
+        /// Clamps each input pixel's channel-values to (0., 1.) and multiplies them by 255 before converting to an Rgb8-Image.
+        /// See tests/data/*_compare_rgb.png images for examples.
         fn to_color_map(&self) -> RgbImage;
     }
 
@@ -125,7 +127,12 @@ pub use prelude::GraySimilarity;
 pub use prelude::GraySimilarityImage;
 #[doc(inline)]
 pub use prelude::RGBSimilarity;
+#[doc(inline)]
+pub use prelude::RGBSimilarityImage;
+
+pub use prelude::ToColorMap;
 pub use prelude::ToGrayScale;
+
 use prelude::*;
 use utils::Decompose;
 
@@ -170,6 +177,10 @@ pub fn rgb_similarity_structure(
     first: &RgbImage,
     second: &RgbImage,
 ) -> Result<RGBSimilarity, CompareError> {
+    if first.dimensions() != second.dimensions() {
+        return Err(CompareError::DimensionsDiffer);
+    }
+
     let first_channels = first.split_channels();
     let second_channels = second.split_channels();
     let mut results = Vec::new();
@@ -211,10 +222,26 @@ mod tests {
     use super::*;
 
     #[test]
-    fn dimensions_differ_test() {
+    fn dimensions_differ_test_gray_structure() {
         let first = GrayImage::new(1, 1);
         let second = GrayImage::new(2, 2);
         let result = gray_similarity_structure(&Algorithm::RootMeanSquared, &first, &second);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn dimensions_differ_test_rgb_structure() {
+        let first = RgbImage::new(1, 1);
+        let second = RgbImage::new(2, 2);
+        let result = rgb_similarity_structure(&Algorithm::RootMeanSquared, &first, &second);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn dimensions_differ_test_gray_histos() {
+        let first = GrayImage::new(1, 1);
+        let second = GrayImage::new(2, 2);
+        let result = gray_similarity_histogram(Metric::Hellinger, &first, &second);
         assert!(result.is_err());
     }
 }
