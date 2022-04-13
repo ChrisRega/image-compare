@@ -1,6 +1,43 @@
 use crate::prelude::*;
 use image::GrayImage;
 
+pub trait Decompose {
+    fn split_channels(&self) -> [GrayImage; 3];
+}
+
+impl Decompose for RgbImage {
+    fn split_channels(&self) -> [GrayImage; 3] {
+        let mut red = GrayImage::new(self.width(), self.height());
+        let mut green = red.clone();
+        let mut blue = red.clone();
+        Window::from_image(&red).iter_pixels().for_each(|p| {
+            let data = self.get_pixel(p.0, p.1);
+            red.put_pixel(p.0, p.1, Luma([data[0]]));
+            green.put_pixel(p.0, p.1, Luma([data[1]]));
+            blue.put_pixel(p.0, p.1, Luma([data[2]]));
+        });
+        [red, green, blue]
+    }
+}
+
+pub fn merge_similarity_channels(input: &[&GraySimilarityImage; 3]) -> RGBSimilarityImage {
+    let mut output = RGBSimilarityImage::new(input[0].width(), input[0].height());
+    Window::new((0, 0), (output.width() - 1, output.height() - 1))
+        .iter_pixels()
+        .for_each(|p| {
+            output.put_pixel(
+                p.0,
+                p.1,
+                Rgb([
+                    input[0].get_pixel(p.0, p.1)[0],
+                    input[1].get_pixel(p.0, p.1)[0],
+                    input[2].get_pixel(p.0, p.1)[0],
+                ]),
+            )
+        });
+    output
+}
+
 pub struct Window {
     pub top_left: (u32, u32),
     pub bottom_right: (u32, u32),
@@ -77,7 +114,7 @@ impl Window {
     }
 }
 
-pub fn draw_window_to_image(window: &Window, image: &mut SimilarityImage, val: f32) {
+pub fn draw_window_to_image(window: &Window, image: &mut GraySimilarityImage, val: f32) {
     window
         .iter_pixels()
         .for_each(|current_pixel| image.put_pixel(current_pixel.0, current_pixel.1, Luma([val])));

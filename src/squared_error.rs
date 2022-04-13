@@ -5,9 +5,9 @@ use utils::Window;
 pub fn root_mean_squared_error_simple(
     first: &GrayImage,
     second: &GrayImage,
-) -> Result<Similarity, CompareError> {
+) -> Result<GraySimilarity, CompareError> {
     let dimension = first.dimensions();
-    let mut image = SimilarityImage::new(dimension.0, dimension.1);
+    let mut image = GraySimilarityImage::new(dimension.0, dimension.1);
     Window::from_image(first).iter_pixels().for_each(|pixel| {
         let diff = first.get_pixel(pixel.0, pixel.1)[0] as i32
             - second.get_pixel(pixel.0, pixel.1)[0] as i32;
@@ -24,7 +24,7 @@ pub fn root_mean_squared_error_simple(
             .sum::<f64>()
             / (image.pixels().len() as f64))
             .sqrt();
-    Ok(Similarity { image, score })
+    Ok(GraySimilarity { image, score })
 }
 
 #[cfg(test)]

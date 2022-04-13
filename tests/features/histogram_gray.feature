@@ -2,7 +2,7 @@ Feature: Gray image comparison using histogram similarity
 
   Scenario Outline: Comparing a modified image to the original using histogram correlation
     Given the images 'tests/data/pad_gaprao.png' and '<compare_image>' are loaded
-    When comparing the images using histogram 'correlation'
+    When comparing the images using histogram 'correlation' as grayscale
     Then the similarity score is <result>
 
     Examples:
@@ -15,7 +15,7 @@ Feature: Gray image comparison using histogram similarity
 
   Scenario Outline: Comparing a modified image to the original using histogram chisquare
     Given the images 'tests/data/pad_gaprao.png' and '<compare_image>' are loaded
-    When comparing the images using histogram 'chisquare'
+    When comparing the images using histogram 'chisquare' as grayscale
     Then the similarity score is <result>
 
     Examples:
@@ -24,7 +24,7 @@ Feature: Gray image comparison using histogram similarity
 
   Scenario Outline: Comparing a modified image to the original using histogram intersection
     Given the images 'tests/data/pad_gaprao.png' and '<compare_image>' are loaded
-    When comparing the images using histogram 'intersection'
+    When comparing the images using histogram 'intersection' as grayscale
     Then the similarity score is <result>
 
     Examples:
@@ -36,7 +36,7 @@ Feature: Gray image comparison using histogram similarity
 
   Scenario Outline: Comparing a modified image to the original using hellinger distance of histograms
     Given the images 'tests/data/pad_gaprao.png' and '<compare_image>' are loaded
-    When comparing the images using histogram 'hellinger distance'
+    When comparing the images using histogram 'hellinger distance' as grayscale
     Then the similarity score is <result>
 
     Examples:
