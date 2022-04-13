@@ -8,11 +8,12 @@ Note that this crate is heavily work in progress. Algorithms are neither cross-c
 Everything is implemented in plain CPU with no SIMD or GPU usage.
 
 ### Supported now:
-- Comparing grayscale images by structure
+- Comparing grayscale and rgb images by structure
   - By RMS - score is calculated by: <img src="https://render.githubusercontent.com/render/math?math=1-\sqrt{\frac{(\sum_{x,y=0}^{x,y=w,h}\left(f(x,y)-g(x,y)\right)^2)}{w*h}}"> 
   - By MSSIM
     - SSIM is implemented as described on [wikipedia](https://en.wikipedia.org/wiki/Structural_similarity): <img src="https://render.githubusercontent.com/render/math?math=\mathrm{SSIM}(x,y)={\frac {(2\mu _{x}\mu _{y}+c_{1})(2\sigma _{xy}+c_{2})}{(\mu _{x}^{2}+\mu _{y}^{2}+c_{1})(\sigma _{x}^{2}+\sigma _{y}^{2}+c_{2})}}"> 
     - MSSIM is calculated by using 8x8 pixel windows for SSIM and averaging over the results
+  - RGB type images are split to R,G and B channels and processed separately. The worst of the color results is propagated as score but a float-typed RGB image provides access to all values.
 - Comparing grayscale images by histogram
   - Several distance metrics implemented see [OpenCV docs](https://docs.opencv.org/4.5.5/d8/dc8/tutorial_histogram_comparison.html):
     - Correlation <img src="https://render.githubusercontent.com/render/math?math=d(H_1,H_2) = \frac{\sum_I (H_1(I) - \bar{H_1}) (H_2(I) - \bar{H_2})}{\sqrt{\sum_I(H_1(I) - \bar{H_1})^2 \sum_I(H_2(I) - \bar{H_2})^2}}">
@@ -22,5 +23,4 @@ Everything is implemented in plain CPU with no SIMD or GPU usage.
      
 ### Planned:
 - Histogram comparison for RGB images
-- RMS for RGB images
 - SIMD for RMS and MSSIM
