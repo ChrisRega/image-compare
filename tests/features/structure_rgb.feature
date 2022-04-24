@@ -1,4 +1,4 @@
-Feature: Gray image comparison using structure similarity
+Feature: RGB image comparison using RMS and MSSIM
 
   Scenario Outline: Comparing a modified image to the original using RMS algorithm
     Given the images 'tests/data/pad_gaprao.png' and '<compare_image>' are loaded
@@ -45,3 +45,4 @@ Feature: Gray image comparison using structure similarity
     Given the images 'tests/data/pad_gaprao.png' and 'tests/data/pad_gaprao_color_filters.png' are loaded
     When comparing the images using MSSIM as rgb
     Then the rgb similarity image matches 'tests/data/pad_gaprao_color_filters_ssim_compare_rgb.png'
+

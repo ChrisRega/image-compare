@@ -1,6 +1,6 @@
 [package]
 name = "image-compare"
-version = "0.2.0-RC1"
+version = "0.2.0"
 edition = "2021"
 authors = ["Christopher Regali <christopher.regali@vdop.org>"]
 license = "MIT"

@@ -1,4 +1,4 @@
-Feature: Gray image comparison using histogram similarity
+Feature: Gray image comparison using histogram similarity with different metrics
 
   Scenario Outline: Comparing a modified image to the original using histogram correlation
     Given the images 'tests/data/pad_gaprao.png' and '<compare_image>' are loaded

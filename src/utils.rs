@@ -1,8 +1,26 @@
 use crate::prelude::*;
 use image::GrayImage;
 
+/// see https://www.itu.int/rec/T-REC-T.871
+fn rgb_to_yuv(rgb: &[f32; 3]) -> [f32; 3] {
+    let py = 0. + (0.299 * rgb[0]) + (0.587 * rgb[1]) + (0.114 * rgb[2]);
+    let pu = 128. - (0.168736 * rgb[0]) - (0.331264 * rgb[1]) + (0.5 * rgb[2]);
+    let pv = 128. + (0.5 * rgb[0]) - (0.418688 * rgb[1]) - (0.081312 * rgb[2]);
+    [py, pu, pv]
+}
+
+/// see https://www.itu.int/rec/T-REC-T.871
+#[allow(dead_code)]
+fn yuv_to_rgb(yuv: &[f32; 3]) -> [f32; 3] {
+    let r = yuv[0] + (1.402 * (yuv[2] - 128.));
+    let g = yuv[0] - (0.344136 * (yuv[1] - 128.)) - (0.714136 * (yuv[2] - 128.));
+    let b = yuv[0] + (1.772 * (yuv[1] - 128.));
+    [r, b, g]
+}
+
 pub trait Decompose {
     fn split_channels(&self) -> [GrayImage; 3];
+    fn split_to_yuv(&self) -> [GrayImage; 3];
 }
 
 impl Decompose for RgbImage {
@@ -17,6 +35,20 @@ impl Decompose for RgbImage {
             blue.put_pixel(p.0, p.1, Luma([data[2]]));
         });
         [red, green, blue]
+    }
+
+    fn split_to_yuv(&self) -> [GrayImage; 3] {
+        let mut y = GrayImage::new(self.width(), self.height());
+        let mut u = y.clone();
+        let mut v = y.clone();
+        Window::from_image(&y).iter_pixels().for_each(|p| {
+            let data = self.get_pixel(p.0, p.1);
+            let yuv = rgb_to_yuv(&data.0.map(|c| c as f32));
+            y.put_pixel(p.0, p.1, Luma([yuv[0].clamp(0., 255.) as u8]));
+            u.put_pixel(p.0, p.1, Luma([yuv[1].clamp(0., 255.) as u8]));
+            v.put_pixel(p.0, p.1, Luma([yuv[2].clamp(0., 255.) as u8]));
+        });
+        [y, u, v]
     }
 }
 
@@ -176,5 +208,35 @@ mod tests {
         let window = Window::from_image(&img);
         assert_eq!(window.bottom_right.0, 126);
         assert_eq!(window.bottom_right.1, 243);
+    }
+
+    #[test]
+    fn rgb_to_yuv_test() {
+        let white = [255., 255., 255.];
+        let black = [0., 0., 0.];
+        let white_yuv = rgb_to_yuv(&white);
+        assert_eq!(white_yuv[0], 255.);
+        assert_eq!(white_yuv[1], 128.);
+        assert_eq!(white_yuv[2], 128.);
+
+        let black_yuv = rgb_to_yuv(&black);
+        assert_eq!(black_yuv[0], 0.);
+        assert_eq!(black_yuv[1], 128.);
+        assert_eq!(black_yuv[2], 128.);
+    }
+
+    #[test]
+    fn yuv_to_rgb_test() {
+        let white_yuv = [255., 128., 128.];
+        let black_yuv = [0., 128., 128.];
+        let white = yuv_to_rgb(&white_yuv);
+        assert_eq!(white[0], 255.);
+        assert_eq!(white[1], 255.);
+        assert_eq!(white[2], 255.);
+
+        let black = yuv_to_rgb(&black_yuv);
+        assert_eq!(black[0], 0.);
+        assert_eq!(black[1], 0.);
+        assert_eq!(black[2], 0.);
     }
 }

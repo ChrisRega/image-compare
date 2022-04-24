@@ -19,12 +19,22 @@
 //! let image_two = image::open("image2.png").expect("Could not find test-image").into_luma8();
 //! let result = image_compare::gray_similarity_histogram(Metric::Hellinger, &image_one, &image_two).expect("Images had different dimensions");
 //! ```
-//! //! Check the [`Metric`] enum for implementation details
+//! # Comparing rgb images using hybrid mode
+//!
+//! Histogram comparisons are possible using the histogram comparison function
+//! ```no_run
+//! let image_one = image::open("image1.png").expect("Could not find test-image").into_rgb8();
+//! let image_two = image::open("image2.png").expect("Could not find test-image").into_rgb8();
+//! let result = image_compare::rgb_hybrid_compare(&image_one, &image_two).expect("Images had different dimensions");
+//! ```
+//!
+//! Check the [`Metric`] enum for implementation details
 #![warn(missing_docs)]
 #![warn(unused_qualifications)]
 #![deny(deprecated)]
 
 mod histogram;
+mod hybrid;
 mod squared_error;
 mod ssim;
 mod utils;
@@ -216,6 +226,9 @@ pub fn gray_similarity_histogram(
     }
     histogram::img_compare(first, second, metric)
 }
+
+#[doc(inline)]
+pub use hybrid::rgb_hybrid_compare;
 
 #[cfg(test)]
 mod tests {

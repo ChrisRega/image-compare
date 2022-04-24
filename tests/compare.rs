@@ -92,6 +92,17 @@ fn compare_mssim_rgb(world: &mut CompareWorld) {
     );
 }
 
+#[when(expr = "comparing the images using the hybrid mode as rgb")]
+fn compare_hybrid_rgb(world: &mut CompareWorld) {
+    world.comparison_result_rgb = Some(
+        image_compare::rgb_hybrid_compare(
+            &world.first.as_ref().unwrap().clone().into_rgb8(),
+            &world.second.as_ref().unwrap().clone().into_rgb8(),
+        )
+        .expect("Error comparing the two images!"),
+    );
+}
+
 #[then(expr = "the similarity score is {float}")]
 fn check_result_score(world: &mut CompareWorld, score: f64) {
     if world.comparison_result.is_some() {
@@ -140,6 +151,7 @@ fn check_result_image_rgb(world: &mut CompareWorld, reference: String) {
         1.0
     );
 }
+
 #[async_trait(?Send)]
 impl World for CompareWorld {
     type Error = Infallible;
@@ -159,4 +171,5 @@ async fn main() {
     CompareWorld::run("tests/features/structure_gray.feature").await;
     CompareWorld::run("tests/features/histogram_gray.feature").await;
     CompareWorld::run("tests/features/structure_rgb.feature").await;
+    CompareWorld::run("tests/features/hybrid_rgb.feature").await;
 }

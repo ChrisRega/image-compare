@@ -13,7 +13,18 @@ Everything is implemented in plain CPU with no SIMD or GPU usage.
   - By MSSIM
     - SSIM is implemented as described on [wikipedia](https://en.wikipedia.org/wiki/Structural_similarity): <img src="https://render.githubusercontent.com/render/math?math=\mathrm{SSIM}(x,y)={\frac {(2\mu _{x}\mu _{y}+c_{1})(2\sigma _{xy}+c_{2})}{(\mu _{x}^{2}+\mu _{y}^{2}+c_{1})(\sigma _{x}^{2}+\sigma _{y}^{2}+c_{2})}}"> 
     - MSSIM is calculated by using 8x8 pixel windows for SSIM and averaging over the results
-  - RGB type images are split to R,G and B channels and processed separately. The worst of the color results is propagated as score but a float-typed RGB image provides access to all values.
+  - RGB type images are split to R,G and B channels and processed separately. 
+    - The worst of the color results is propagated as score but a float-typed RGB image provides access to all values.
+    - As you can see in the gherkin tests this result is not worth it currently, as it takes a lot more time
+    - It could be improved, by not just propagating the individual color-score results but using the worst for each pixel
+    - This approach is implemented in hybrid-mode, see below
+  - "hybrid comparison"
+    - Splitting the image to YUV colorspace according to T.871
+    - Processing the Y channel with MSSIM
+    - Comparing U and V channels via RMS
+    - Recombining the differences to a nice visualization image
+    - Score is calculated as: <img src="https://render.githubusercontent.com/render/math?math=\mathrm{score}=\mathrm{avg}_{x,y}\left(\mathrm{min}\left[\Delta \mathrm{MSSIM}(x,y),1- \sqrt{(1-\Delta RMS(u,x,y))^2 + (1-\Delta RMS(v,x,y))^2}\right]\right)">
+    - This allows for a good separation of color differences and structure differences
 - Comparing grayscale images by histogram
   - Several distance metrics implemented see [OpenCV docs](https://docs.opencv.org/4.5.5/d8/dc8/tutorial_histogram_comparison.html):
     - Correlation <img src="https://render.githubusercontent.com/render/math?math=d(H_1,H_2) = \frac{\sum_I (H_1(I) - \bar{H_1}) (H_2(I) - \bar{H_2})}{\sqrt{\sum_I(H_1(I) - \bar{H_1})^2 \sum_I(H_2(I) - \bar{H_2})^2}}">
@@ -21,6 +32,5 @@ Everything is implemented in plain CPU with no SIMD or GPU usage.
     - Intersection <img src="https://render.githubusercontent.com/render/math?math=d(H_1,H_2) = \sum _I \min (H_1(I), H_2(I))">
     - Hellinger distance <img src="https://render.githubusercontent.com/render/math?math=d(H_1,H_2) = \sqrt{1 - \frac{1}{\sqrt{\int{H_1} \int{H_2}}} \sum_I \sqrt{H_1(I) \cdot H_2(I)}}">
      
-### Planned:
-- Histogram comparison for RGB images
-- SIMD for RMS and MSSIM
+### Next up:
+- Performance improvements (possibly SIMD, maybe GPGPU)
