@@ -22,11 +22,12 @@ fn merge_similarity_channels_yuv(input: &[GraySimilarityImage; 3]) -> RGBSimilar
 
 /// Comparing structure via MSSIM on Y channel, comparing color-diff-vectors on U and V summing the squares
 /// Please mind that the RGBSimilarity-Image does _not_ contain plain RGB here
-/// - The red channel contains 1. - delta_y
-/// - The green channel contains 1. - delta_u
-/// - The blue channel contains 1. - delta_v
-/// This leads to a nice visualization of color and structure differences - with structural (meaning gray mssim diffs) leading to red rectangles
+/// - The red channel contains 1. - similarity(ssim, y)
+/// - The green channel contains 1. -  similarity(rms, u)
+/// - The blue channel contains 1. -  similarity(rms, v)
+/// This leads to a nice visualization of color and structure differences - with structural differences (meaning gray mssim diffs) leading to red rectangles
 /// and and the u and v color diffs leading to color-deviations in green, blue and cyan
+/// All-black meaning no differences
 pub fn rgb_hybrid_compare(
     first: &RgbImage,
     second: &RgbImage,
