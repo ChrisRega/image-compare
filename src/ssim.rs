@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use crate::utils::{draw_window_to_image, Window};
+use rayon::prelude::*;
 
 const DEFAULT_WINDOW_SIZE: u32 = 8;
 const K1: f64 = 0.01;
@@ -14,7 +15,7 @@ pub fn ssim_simple(first: &GrayImage, second: &GrayImage) -> Result<GraySimilari
     let window = Window::from_image(first);
     let windows = window.subdivide_by_offset(DEFAULT_WINDOW_SIZE);
     let results = windows
-        .into_iter()
+        .par_iter()
         .map(|w| (ssim_for_window(first, second, &w), w))
         .collect::<Vec<_>>();
     let score = results.iter().map(|r| r.0 * r.1.area() as f64).sum::<f64>()

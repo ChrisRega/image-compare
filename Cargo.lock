@@ -596,6 +596,7 @@ dependencies = [
  "async-trait",
  "cucumber",
  "image",
+ "rayon",
  "thiserror",
  "tokio",
 ]

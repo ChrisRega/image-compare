@@ -15,6 +15,7 @@ description = "Image comparison library based upon the image crate. Currently it
 [dependencies]
 thiserror = "1.0"
 image = "0.24"
+rayon = "1.5"
 
 [dev-dependencies]
 async-trait = "0.1"
