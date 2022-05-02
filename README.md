@@ -5,7 +5,8 @@
 Simple image comparison in rust based on the image crate
 
 Note that this crate is heavily work in progress. Algorithms are neither cross-checked not particularly fast yet.
-Everything is implemented in plain CPU with no SIMD or GPU usage.
+Everything is implemented in plain CPU with rayon multithreading. 
+SIMD is under investigation on a feature branch (simd-experimental) and may or may not increase performance.
 
 ### Supported now:
 - Comparing grayscale and rgb images by structure
@@ -33,4 +34,4 @@ Everything is implemented in plain CPU with no SIMD or GPU usage.
     - Hellinger distance <img src="https://render.githubusercontent.com/render/math?math=d(H_1,H_2) = \sqrt{1 - \frac{1}{\sqrt{\int{H_1} \int{H_2}}} \sum_I \sqrt{H_1(I) \cdot H_2(I)}}">
      
 ### Next up:
-- Performance improvements (possibly SIMD, maybe GPGPU)
+- Further Performance improvements (possibly SIMD, maybe GPGPU)

@@ -591,11 +591,12 @@ dependencies = [
 
 [[package]]
 name = "image-compare"
-version = "0.2.0-RC2"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "cucumber",
  "image",
+ "itertools",
  "rayon",
  "thiserror",
  "tokio",

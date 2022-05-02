@@ -1,6 +1,6 @@
 use crate::prelude::*;
-use crate::utils;
-use utils::Window;
+use itertools::izip;
+use rayon::prelude::*;
 
 pub fn root_mean_squared_error_simple(
     first: &GrayImage,
@@ -8,13 +8,13 @@ pub fn root_mean_squared_error_simple(
 ) -> Result<GraySimilarity, CompareError> {
     let dimension = first.dimensions();
     let mut image = GraySimilarityImage::new(dimension.0, dimension.1);
-    Window::from_image(first).iter_pixels().for_each(|pixel| {
-        let diff = first.get_pixel(pixel.0, pixel.1)[0] as i32
-            - second.get_pixel(pixel.0, pixel.1)[0] as i32;
+    let iter = izip!(first.pixels(), second.pixels(), image.pixels_mut());
+
+    iter.par_bridge().for_each(|(a, b, c)| {
+        let diff = a[0] as i32 - b[0] as i32;
         let normalized = diff as f32 / u8::MAX as f32;
         let squared_root = 1. - normalized.abs();
-
-        image.put_pixel(pixel.0, pixel.1, Luma([squared_root]))
+        *c = Luma([squared_root]);
     });
 
     let score: f64 = 1.
