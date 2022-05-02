@@ -32,10 +32,21 @@ pub fn ssim_simple(first: &GrayImage, second: &GrayImage) -> Result<GraySimilari
 }
 
 fn ssim_for_window(first: &GrayImage, second: &GrayImage, window: &Window) -> f64 {
+    let mean_x = mean(first, window);
+    let mean_y = mean(second, window);
+    let variance_x = covariance(first, mean_x, first, mean_x, window);
+    let variance_y = covariance(second, mean_y, second, mean_y, window);
+    let covariance = covariance(first, mean_x, second, mean_y, window);
+    let counter = (2. * mean_x * mean_y + C1) * (2. * covariance + C2);
+    let denominator = (mean_x.powi(2) + mean_y.powi(2) + C1) * (variance_x + variance_y + C2);
+    counter / denominator
+}
+
+fn ssim_for_window_simd(first: &GrayImage, second: &GrayImage, window: &Window) -> f64 {
     let mean_x = mean_simd(first, window);
     let mean_y = mean_simd(second, window);
-    let variance_x = covariance_simd(first, mean_x, first, mean_x, window);
-    let variance_y = covariance_simd(second, mean_y, second, mean_y, window);
+    let variance_x = variance_simd(first, mean_x, window);
+    let variance_y = variance_simd(second, mean_y, window);
     let covariance = covariance_simd(first, mean_x, second, mean_y, window);
     let counter = (2. * mean_x * mean_y + C1) * (2. * covariance + C2);
     let denominator = (mean_x.powi(2) + mean_y.powi(2) + C1) * (variance_x + variance_y + C2);
@@ -60,6 +71,27 @@ fn covariance(
         .sum::<f64>()
 }
 
+fn variance_simd(image_x: &GrayImage, mean_x: f64, window: &Window) -> f64 {
+    if window.width() != 8 {
+        return covariance(image_x, mean_x, image_x, mean_x, window);
+    }
+    let mut sum: f64 = 0.0;
+
+    for row in 0..window.height() {
+        let mean_x_f32 = mean_x as f32;
+        unsafe {
+            let row = row + window.top_left.1;
+            let row_floats_x = load_as_float(&image_x.get_pixel(window.top_left.0, row).0);
+            let row_floats_mean_x = _mm256_set1_ps(mean_x_f32);
+            let diffs_x = _mm256_sub_ps(row_floats_x, row_floats_mean_x);
+            let cov = _mm256_mul_ps(diffs_x, diffs_x);
+            let cov_sum = sum_reduce(cov);
+            sum += cov_sum as f64;
+        }
+    }
+    sum
+}
+
 fn covariance_simd(
     image_x: &GrayImage,
     mean_x: f64,
@@ -70,7 +102,6 @@ fn covariance_simd(
     if window.width() != 8 {
         return covariance(image_x, mean_x, image_y, mean_y, window);
     }
-
     let mut sum: f64 = 0.0;
     for row in 0..window.height() {
         let mean_x_f32 = mean_x as f32;
@@ -186,7 +217,7 @@ mod tests {
         let image_one = image::open("tests/data/pad_gaprao.png")
             .expect("Could not find test-image")
             .into_luma8();
-        const RUNCOUNT: usize = 10;
+        const RUNCOUNT: usize = 1000;
         (0..RUNCOUNT).for_each(|_| {
             ssim_simple(&image_one, &image_one).unwrap();
         });
