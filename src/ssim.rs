@@ -58,17 +58,12 @@ fn covariance(
 }
 
 fn mean(image: &GrayImage, window: &Window) -> f64 {
-    let mut result = 0.0;
-    let mut area: usize = 0;
+    let sum = window
+        .iter_pixels()
+        .map(|pixel| image.get_pixel(pixel.0, pixel.1)[0] as f64)
+        .sum::<f64>();
 
-    window.iter_pixels().for_each(|pixel| {
-        if let Some(pixel) = image.get_pixel_checked(pixel.0, pixel.1) {
-            result += pixel[0] as f64;
-            area += 1;
-        }
-    });
-
-    result / area as f64
+    sum / window.area() as f64
 }
 
 #[cfg(test)]
