@@ -1,5 +1,7 @@
 use crate::prelude::*;
 use image::GrayImage;
+use itertools::izip;
+use rayon::prelude::*;
 
 /// see https://www.itu.int/rec/T-REC-T.871
 fn rgb_to_yuv(rgb: &[f32; 3]) -> [f32; 3] {
@@ -54,19 +56,17 @@ impl Decompose for RgbImage {
 
 pub fn merge_similarity_channels(input: &[&GraySimilarityImage; 3]) -> RGBSimilarityImage {
     let mut output = RGBSimilarityImage::new(input[0].width(), input[0].height());
-    Window::new((0, 0), (output.width() - 1, output.height() - 1))
-        .iter_pixels()
-        .for_each(|p| {
-            output.put_pixel(
-                p.0,
-                p.1,
-                Rgb([
-                    input[0].get_pixel(p.0, p.1)[0],
-                    input[1].get_pixel(p.0, p.1)[0],
-                    input[2].get_pixel(p.0, p.1)[0],
-                ]),
-            )
-        });
+    izip!(
+        input[0].pixels(),
+        input[1].pixels(),
+        input[2].pixels(),
+        output.pixels_mut()
+    )
+    .par_bridge()
+    .for_each(|p| {
+        *p.3 = Rgb([p.0[0], p.1[0], p.2[0]]);
+    });
+
     output
 }
 
