@@ -30,12 +30,19 @@ impl Decompose for RgbImage {
         let mut red = GrayImage::new(self.width(), self.height());
         let mut green = red.clone();
         let mut blue = red.clone();
-        Window::from_image(&red).iter_pixels().for_each(|p| {
-            let data = self.get_pixel(p.0, p.1);
-            red.put_pixel(p.0, p.1, Luma([data[0]]));
-            green.put_pixel(p.0, p.1, Luma([data[1]]));
-            blue.put_pixel(p.0, p.1, Luma([data[2]]));
+        izip!(
+            red.pixels_mut(),
+            green.pixels_mut(),
+            blue.pixels_mut(),
+            self.pixels()
+        )
+        .par_bridge()
+        .for_each(|(r, g, b, rgb)| {
+            *r = Luma([rgb[0]]);
+            *g = Luma([rgb[1]]);
+            *b = Luma([rgb[2]]);
         });
+
         [red, green, blue]
     }
 
@@ -43,13 +50,20 @@ impl Decompose for RgbImage {
         let mut y = GrayImage::new(self.width(), self.height());
         let mut u = y.clone();
         let mut v = y.clone();
-        Window::from_image(&y).iter_pixels().for_each(|p| {
-            let data = self.get_pixel(p.0, p.1);
-            let yuv = rgb_to_yuv(&data.0.map(|c| c as f32));
-            y.put_pixel(p.0, p.1, Luma([yuv[0].clamp(0., 255.) as u8]));
-            u.put_pixel(p.0, p.1, Luma([yuv[1].clamp(0., 255.) as u8]));
-            v.put_pixel(p.0, p.1, Luma([yuv[2].clamp(0., 255.) as u8]));
+        izip!(
+            y.pixels_mut(),
+            u.pixels_mut(),
+            v.pixels_mut(),
+            self.pixels()
+        )
+        .par_bridge()
+        .for_each(|(y, u, v, rgb)| {
+            let yuv = rgb_to_yuv(&rgb.0.map(|c| c as f32));
+            *y = Luma([yuv[0].clamp(0., 255.) as u8]);
+            *u = Luma([yuv[1].clamp(0., 255.) as u8]);
+            *v = Luma([yuv[2].clamp(0., 255.) as u8]);
         });
+
         [y, u, v]
     }
 }
