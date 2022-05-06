@@ -1,22 +1,31 @@
 use crate::prelude::*;
-use crate::utils::Window;
 use crate::{gray_similarity_structure, Decompose};
+use itertools::izip;
+use rayon::prelude::*;
 
 fn merge_similarity_channels_yuv(input: &[GraySimilarityImage; 3]) -> RGBSimilarity {
     let mut image = RGBSimilarityImage::new(input[0].width(), input[0].height());
-    let mut deviation = 0.0;
-    Window::new((0, 0), (image.width() - 1, image.height() - 1))
-        .iter_pixels()
-        .for_each(|p| {
-            let y = input[0].get_pixel(p.0, p.1)[0].clamp(0.0, 1.0);
-            let u = input[1].get_pixel(p.0, p.1)[0].clamp(0.0, 1.0);
-            let v = input[2].get_pixel(p.0, p.1)[0].clamp(0.0, 1.0);
-            let color_diff = 1. - (1. - u.powi(2) + 1. - v.powi(2)).sqrt().clamp(0.0, 1.0);
-            deviation += y.min(color_diff);
+    let mut deviation = Vec::new();
+    deviation.resize((input[0].width() * input[0].height()) as usize, 0.0);
+    izip!(
+        image.pixels_mut(),
+        input[0].pixels(),
+        input[1].pixels(),
+        input[2].pixels(),
+        deviation.iter_mut()
+    )
+    .par_bridge()
+    .for_each(|(rgb, y, u, v, deviation)| {
+        let y = y[0].clamp(0.0, 1.0);
+        let u = u[0].clamp(0.0, 1.0);
+        let v = v[0].clamp(0.0, 1.0);
+        let color_diff = 1. - (1. - u.powi(2) + 1. - v.powi(2)).sqrt().clamp(0.0, 1.0);
+        //f32 for keeping numerical stability for hybrid compare in 0.2.-branch
+        *deviation += y.min(color_diff) as f32;
+        *rgb = Rgb([1. - y, 1. - u, 1. - v]);
+    });
 
-            image.put_pixel(p.0, p.1, Rgb([1. - y, 1. - u, 1. - v]))
-        });
-    let score = deviation as f64 / (image.width() as f64 * image.height() as f64);
+    let score = deviation.iter().sum::<f32>() as f64 / deviation.len() as f64;
     RGBSimilarity { image, score }
 }
 
