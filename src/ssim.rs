@@ -16,14 +16,14 @@ pub fn ssim_simple(first: &GrayImage, second: &GrayImage) -> Result<GraySimilari
     let windows = window.subdivide_by_offset(DEFAULT_WINDOW_SIZE);
     let results = windows
         .par_iter()
-        .map(|w| (ssim_for_window(first, second, &w), w))
+        .map(|w| (ssim_for_window(first, second, w), w))
         .collect::<Vec<_>>();
     let score = results.iter().map(|r| r.0 * r.1.area() as f64).sum::<f64>()
         / results.iter().map(|r| r.1.area() as f64).sum::<f64>();
 
     results
         .iter()
-        .for_each(|r| draw_window_to_image(&r.1, &mut image, r.0 as f32));
+        .for_each(|r| draw_window_to_image(r.1, &mut image, r.0 as f32));
 
     Ok(GraySimilarity { image, score })
 }
