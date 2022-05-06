@@ -10,7 +10,7 @@ documentation = "https://docs.rs/image-compare"
 readme = "README.md"
 categories = ["multimedia::images"]
 exclude = ["tests/data/*", ".github"]
-description = "Image comparison library based upon the image crate. Currently it provides SSIM and RMS for comparing grayscale and rgb images as well as several grayscale histogram distance metrics. All with a friendly license."
+description = "Image comparison library based upon the image crate. Currently it provides SSIM and RMS for comparing grayscale and rgb images, a cool hybrid compare as well as several grayscale histogram distance metrics. All with a friendly license."
 
 [dependencies]
 thiserror = "1.0"
