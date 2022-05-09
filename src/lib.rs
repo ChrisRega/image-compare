@@ -143,6 +143,7 @@ pub use prelude::RGBSimilarityImage;
 
 pub use prelude::ToColorMap;
 pub use prelude::ToGrayScale;
+pub use ssim::ssim_simple;
 
 use prelude::*;
 use utils::Decompose;

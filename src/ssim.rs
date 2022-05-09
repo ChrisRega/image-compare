@@ -18,15 +18,15 @@ pub fn ssim_simple(first: &GrayImage, second: &GrayImage) -> Result<GraySimilari
     let window = Window::from_image(first);
     let windows = window.subdivide_by_offset(DEFAULT_WINDOW_SIZE);
     let results = windows
-        .par_iter()
-        .map(|w| (ssim_for_window(first, second, &w), w))
+        .iter()
+        .map(|w| (ssim_for_window(first, second, w), w))
         .collect::<Vec<_>>();
     let score = results.iter().map(|r| r.0 * r.1.area() as f64).sum::<f64>()
         / results.iter().map(|r| r.1.area() as f64).sum::<f64>();
 
-    results
-        .iter()
-        .for_each(|r| draw_window_to_image(r.1, &mut image, r.0 as f32));
+    //  results//
+    //     .iter()
+    //    .for_each(|r| draw_window_to_image(r.1, &mut image, r.0 as f32));
 
     Ok(GraySimilarity { image, score })
 }
@@ -37,9 +37,9 @@ fn ssim_for_window(first: &GrayImage, second: &GrayImage, window: &Window) -> f6
     let variance_x = covariance(first, mean_x, first, mean_x, window);
     let variance_y = covariance(second, mean_y, second, mean_y, window);
     let covariance = covariance(first, mean_x, second, mean_y, window);
-    let counter = (2. * mean_x * mean_y + C1) * (2. * covariance + C2);
+    let numerator = (2. * mean_x * mean_y + C1) * (2. * covariance + C2);
     let denominator = (mean_x.powi(2) + mean_y.powi(2) + C1) * (variance_x + variance_y + C2);
-    counter / denominator
+    numerator / denominator
 }
 
 fn ssim_for_window_simd(first: &GrayImage, second: &GrayImage, window: &Window) -> f64 {
@@ -76,9 +76,9 @@ fn variance_simd(image_x: &GrayImage, mean_x: f64, window: &Window) -> f64 {
         return covariance(image_x, mean_x, image_x, mean_x, window);
     }
     let mut sum: f64 = 0.0;
+    let mean_x_f32 = mean_x as f32;
 
     for row in 0..window.height() {
-        let mean_x_f32 = mean_x as f32;
         unsafe {
             let row = row + window.top_left.1;
             let row_floats_x = load_as_float(&image_x.get_pixel(window.top_left.0, row).0);
@@ -125,16 +125,14 @@ fn covariance_simd(
 
 fn mean(image: &GrayImage, window: &Window) -> f64 {
     let mut result = 0.0;
-    let mut area: usize = 0;
 
     window.iter_pixels().for_each(|pixel| {
         if let Some(pixel) = image.get_pixel_checked(pixel.0, pixel.1) {
             result += pixel[0] as f64;
-            area += 1;
         }
     });
 
-    result / area as f64
+    result / window.area() as f64
 }
 
 #[inline(always)]
