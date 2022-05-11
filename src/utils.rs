@@ -2,6 +2,7 @@ use crate::prelude::*;
 use image::GrayImage;
 use itertools::izip;
 use rayon::prelude::*;
+pub const DEFAULT_WINDOW_SIZE: u32 = 8;
 
 /// see https://www.itu.int/rec/T-REC-T.871
 fn rgb_to_yuv(rgb: &[f32; 3]) -> [f32; 3] {
@@ -89,6 +90,89 @@ pub struct Window {
     pub bottom_right: (u32, u32),
 }
 
+pub struct LinearAccelerator {
+    pub windows: Vec<WindowCache>,
+    pub buffer: Vec<f64>,
+}
+
+impl LinearAccelerator {
+    pub fn mk_cached_subdivision(image: &GrayImage) -> LinearAccelerator {
+        let mut buffer = Vec::new();
+        buffer.resize((image.width() * image.height()) as usize, 0.);
+        let windows: Vec<Window> =
+            Window::from_image(image).subdivide_by_offset(DEFAULT_WINDOW_SIZE);
+        let mut offset = 0;
+        let mut window_caches: Vec<_> = windows
+            .into_iter()
+            .map(|window| {
+                let area = window.area() as usize;
+                let cache = WindowCache {
+                    window,
+                    data_offset: offset,
+                    sum: 0.0,
+                };
+                offset += area;
+                cache
+            })
+            .collect();
+        let mut window_cols = image.width() / DEFAULT_WINDOW_SIZE;
+        if image.width() % DEFAULT_WINDOW_SIZE > 0 {
+            window_cols += 1;
+        }
+
+        image.pixels().enumerate().for_each(|(i, p)| {
+            let x = i % image.width() as usize;
+            let y = i / image.width() as usize;
+            let window_x = x / DEFAULT_WINDOW_SIZE as usize;
+            let window_y = y / DEFAULT_WINDOW_SIZE as usize;
+            let float_value = p[0] as f64;
+            let idx = window_y * window_cols as usize + window_x;
+            let item = window_caches.get_mut(idx).unwrap();
+            item.sum += float_value;
+            buffer[item.data_offset] = float_value;
+        });
+
+        LinearAccelerator {
+            windows: window_caches,
+            buffer,
+        }
+    }
+}
+
+pub struct WindowCache {
+    pub window: Window,
+    pub data_offset: usize,
+    pub sum: f64,
+}
+
+impl WindowCache {
+    pub fn mean(&self) -> f64 {
+        self.sum / self.window.area() as f64
+    }
+
+    pub fn variance(&self, mean: f64, data: &Vec<f64>) -> f64 {
+        (self.data_offset..self.window.area() as usize)
+            .into_iter()
+            .map(|i| (data[i] - mean).powi(2))
+            .sum::<f64>()
+            / self.window.area() as f64
+    }
+
+    pub fn covariance(
+        &self,
+        mean: f64,
+        data: &Vec<f64>,
+        other_mean: f64,
+        other_data: &Vec<f64>,
+    ) -> f64 {
+        (self.data_offset..self.window.area() as usize)
+            .into_iter()
+            .map(|i| (data[i] - mean) * (other_data[i] - other_mean))
+            .sum::<f64>()
+            / self.window.area() as f64
+    }
+}
+
 pub struct WindowIter<'a> {
     current_index: u32,
     window: &'a Window,
@@ -131,8 +215,8 @@ impl Window {
 
     pub fn subdivide_by_offset(&self, offset: u32) -> Vec<Window> {
         let mut result = Vec::new();
-        for col in (self.top_left.0..self.width()).step_by(offset as usize) {
-            for row in (self.top_left.1..self.height()).step_by(offset as usize) {
+        for row in (self.top_left.1..self.height()).step_by(offset as usize) {
+            for col in (self.top_left.0..self.width()).step_by(offset as usize) {
                 result.push(Window::new(
                     (col, row),
                     (

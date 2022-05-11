@@ -1,8 +1,10 @@
 use crate::prelude::*;
-use crate::utils::{draw_window_to_image, Window};
+use crate::utils::{
+    draw_window_to_image, LinearAccelerator, Window, WindowCache, DEFAULT_WINDOW_SIZE,
+};
+use itertools::izip;
 use rayon::prelude::*;
 
-const DEFAULT_WINDOW_SIZE: u32 = 8;
 const K1: f64 = 0.01;
 const K2: f64 = 0.03;
 const L: u8 = u8::MAX;
@@ -11,21 +13,57 @@ const C2: f64 = (K2 * L as f64) * (K2 * L as f64);
 
 pub fn ssim_simple(first: &GrayImage, second: &GrayImage) -> Result<GraySimilarity, CompareError> {
     let dimension = first.dimensions();
-    let mut image = GraySimilarityImage::new(dimension.0, dimension.1);
-    let window = Window::from_image(first);
-    let windows = window.subdivide_by_offset(DEFAULT_WINDOW_SIZE);
+    let image = GraySimilarityImage::new(dimension.0, dimension.1);
+    let windows = Window::from_image(first).subdivide_by_offset(DEFAULT_WINDOW_SIZE);
+
     let results = windows
-        .par_iter()
+        .iter()
         .map(|w| (ssim_for_window(first, second, w), w))
         .collect::<Vec<_>>();
     let score = results.iter().map(|r| r.0 * r.1.area() as f64).sum::<f64>()
         / results.iter().map(|r| r.1.area() as f64).sum::<f64>();
 
-    results
-        .iter()
-        .for_each(|r| draw_window_to_image(r.1, &mut image, r.0 as f32));
-
     Ok(GraySimilarity { image, score })
+}
+
+pub fn ssim_cached(first: &GrayImage, second: &GrayImage) -> Result<GraySimilarity, CompareError> {
+    let first_accelerator = LinearAccelerator::mk_cached_subdivision(first);
+    let second_accelerator = LinearAccelerator::mk_cached_subdivision(second);
+
+    let results = izip!(
+        first_accelerator.windows.iter(),
+        second_accelerator.windows.iter()
+    )
+    .map(|(f, s)| {
+        (
+            ssim_for_cached_windows(f, s, &first_accelerator.buffer, &second_accelerator.buffer),
+            &f.window,
+        )
+    })
+    .collect::<Vec<_>>();
+    let score = results.iter().map(|r| r.0 * r.1.area() as f64).sum::<f64>()
+        / results.iter().map(|r| r.1.area() as f64).sum::<f64>();
+
+    Ok(GraySimilarity {
+        image: GraySimilarityImage::new(1, 1),
+        score: 0.0,
+    })
+}
+
+fn ssim_for_cached_windows(
+    first: &WindowCache,
+    second: &WindowCache,
+    first_data: &Vec<f64>,
+    second_data: &Vec<f64>,
+) -> f64 {
+    let mean_x = first.mean();
+    let mean_y = second.mean();
+    let variance_x = first.variance(mean_x, first_data);
+    let variance_y = second.variance(mean_y, second_data);
+    let covariance = first.covariance(mean_x, first_data, mean_y, second_data);
+    let counter = (2. * mean_x * mean_y + C1) * (2. * covariance + C2);
+    let denominator = (mean_x.powi(2) + mean_y.powi(2) + C1) * (variance_x + variance_y + C2);
+    counter / denominator
 }
 
 fn ssim_for_window(first: &GrayImage, second: &GrayImage, window: &Window) -> f64 {

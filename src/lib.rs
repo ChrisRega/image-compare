@@ -39,6 +39,9 @@ mod squared_error;
 mod ssim;
 mod utils;
 
+pub use ssim::ssim_cached;
+pub use ssim::ssim_simple;
+
 #[doc(hidden)]
 pub mod prelude {
     pub use image::{GrayImage, ImageBuffer, Luma, Rgb, RgbImage};
