@@ -92,13 +92,13 @@ pub struct Window {
 
 pub struct LinearAccelerator {
     pub windows: Vec<WindowCache>,
-    pub buffer: Vec<f64>,
+    pub buffer: Vec<u8>,
 }
 
 impl LinearAccelerator {
     pub fn mk_cached_subdivision(image: &GrayImage) -> LinearAccelerator {
         let mut buffer = Vec::new();
-        buffer.resize((image.width() * image.height()) as usize, 0.);
+        buffer.resize((image.width() * image.height()) as usize, 0u8);
         let windows: Vec<Window> =
             Window::from_image(image).subdivide_by_offset(DEFAULT_WINDOW_SIZE);
         let mut offset = 0;
@@ -109,7 +109,7 @@ impl LinearAccelerator {
                 let cache = WindowCache {
                     window,
                     data_offset: offset,
-                    sum: 0.0,
+                    sum: 0,
                 };
                 offset += area;
                 cache
@@ -125,11 +125,10 @@ impl LinearAccelerator {
             let y = i / image.width() as usize;
             let window_x = x / DEFAULT_WINDOW_SIZE as usize;
             let window_y = y / DEFAULT_WINDOW_SIZE as usize;
-            let float_value = p[0] as f64;
             let idx = window_y * window_cols as usize + window_x;
             let item = window_caches.get_mut(idx).unwrap();
-            item.sum += float_value;
-            buffer[item.data_offset] = float_value;
+            item.sum += p[0] as u16;
+            buffer[item.data_offset] = p[0];
         });
 
         LinearAccelerator {
@@ -142,32 +141,26 @@ impl LinearAccelerator {
 pub struct WindowCache {
     pub window: Window,
     pub data_offset: usize,
-    pub sum: f64,
+    pub sum: u16,
 }
 
 impl WindowCache {
     pub fn mean(&self) -> f64 {
-        self.sum / self.window.area() as f64
+        self.sum as f64 / self.window.area() as f64
     }
 
-    pub fn variance(&self, mean: f64, data: &Vec<f64>) -> f64 {
+    pub fn variance(&self, mean: f64, data: &[u8]) -> f64 {
         (self.data_offset..self.window.area() as usize)
             .into_iter()
-            .map(|i| (data[i] - mean).powi(2))
+            .map(|i| (data[i] as f64 - mean).powi(2))
             .sum::<f64>()
             / self.window.area() as f64
     }
 
-    pub fn covariance(
-        &self,
-        mean: f64,
-        data: &Vec<f64>,
-        other_mean: f64,
-        other_data: &Vec<f64>,
-    ) -> f64 {
+    pub fn covariance(&self, mean: f64, data: &[u8], other_mean: f64, other_data: &[u8]) -> f64 {
         (self.data_offset..self.window.area() as usize)
             .into_iter()
-            .map(|i| (data[i] - mean) * (other_data[i] - other_mean))
+            .map(|i| (data[i] as f64 - mean) * (other_data[i] as f64 - other_mean))
             .sum::<f64>()
             / self.window.area() as f64
     }

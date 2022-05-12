@@ -53,8 +53,8 @@ pub fn ssim_cached(first: &GrayImage, second: &GrayImage) -> Result<GraySimilari
 fn ssim_for_cached_windows(
     first: &WindowCache,
     second: &WindowCache,
-    first_data: &Vec<f64>,
-    second_data: &Vec<f64>,
+    first_data: &[u8],
+    second_data: &[u8],
 ) -> f64 {
     let mean_x = first.mean();
     let mean_y = second.mean();
