@@ -1,7 +1,6 @@
 use crate::prelude::*;
 use crate::{gray_similarity_structure, Decompose};
 use itertools::izip;
-use rayon::prelude::*;
 
 fn merge_similarity_channels_yuv(input: &[GraySimilarityImage; 3]) -> RGBSimilarity {
     let mut image = RGBSimilarityImage::new(input[0].width(), input[0].height());
@@ -14,7 +13,6 @@ fn merge_similarity_channels_yuv(input: &[GraySimilarityImage; 3]) -> RGBSimilar
         input[2].pixels(),
         deviation.iter_mut()
     )
-    .par_bridge()
     .for_each(|(rgb, y, u, v, deviation)| {
         let y = y[0].clamp(0.0, 1.0);
         let u = u[0].clamp(0.0, 1.0);

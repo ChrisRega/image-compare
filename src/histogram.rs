@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use rayon::prelude::*;
 
 const BINS: u8 = u8::MAX;
 
@@ -122,12 +121,12 @@ impl Histogram {
     }
 
     pub fn mean(&self) -> f64 {
-        self.data.par_iter().sum::<f64>() / self.data.len() as f64
+        self.data.iter().sum::<f64>() / self.data.len() as f64
     }
 
     pub fn variance(&self) -> f64 {
         let mean = self.mean();
-        self.data.par_iter().map(|v| (v - mean).powi(2)).sum()
+        self.data.iter().map(|v| (v - mean).powi(2)).sum()
     }
 
     pub fn integral(&self) -> f64 {
