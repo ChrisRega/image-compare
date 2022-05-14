@@ -85,6 +85,32 @@ pub fn merge_similarity_channels(input: &[&GraySimilarityImage; 3]) -> RGBSimila
     output
 }
 
+use std::cell::UnsafeCell;
+use std::sync::atomic::{AtomicU16, AtomicUsize, Ordering};
+
+#[derive(Copy, Clone)]
+pub struct UnsafeSlice<'a, T> {
+    slice: &'a [UnsafeCell<T>],
+}
+unsafe impl<'a, T: Send + Sync> Send for UnsafeSlice<'a, T> {}
+unsafe impl<'a, T: Send + Sync> Sync for UnsafeSlice<'a, T> {}
+
+impl<'a, T> UnsafeSlice<'a, T> {
+    pub fn new(slice: &'a mut [T]) -> Self {
+        let ptr = slice as *mut [T] as *const [UnsafeCell<T>];
+        Self {
+            slice: unsafe { &*ptr },
+        }
+    }
+
+    /// SAFETY: It is UB if two threads write to the same index without
+    /// synchronization.
+    pub unsafe fn write(&self, i: usize, value: T) {
+        let ptr = self.slice[i].get();
+        *ptr = value;
+    }
+}
+
 pub struct Window {
     pub top_left: (u32, u32),
     pub bottom_right: (u32, u32),
@@ -97,22 +123,20 @@ pub struct LinearAccelerator {
 
 impl LinearAccelerator {
     pub fn mk_cached_subdivision(image: &GrayImage) -> LinearAccelerator {
-        let mut buffer = Vec::new();
-        buffer.resize((image.width() * image.height()) as usize, 0u8);
+        let mut buffer = vec![0u8; (image.width() * image.height()) as usize];
+        let uslice = UnsafeSlice::new(buffer.as_mut_slice());
         let windows: Vec<Window> =
             Window::from_image(image).subdivide_by_offset(DEFAULT_WINDOW_SIZE);
-        let mut offset = 0;
-        let mut window_caches: Vec<_> = windows
+        let offset = AtomicUsize::new(0);
+        let window_caches: Vec<_> = windows
             .into_iter()
             .map(|window| {
-                let area = window.area() as usize;
-                let cache = WindowCache {
+                let current_offset = offset.fetch_add(window.area() as usize, Ordering::Relaxed);
+                WindowCache {
                     window,
-                    data_offset: offset,
-                    sum: 0,
-                };
-                offset += area;
-                cache
+                    data_offset: current_offset,
+                    sum: AtomicU16::new(0),
+                }
             })
             .collect();
         let mut window_cols = image.width() / DEFAULT_WINDOW_SIZE;
@@ -120,15 +144,17 @@ impl LinearAccelerator {
             window_cols += 1;
         }
 
-        image.pixels().enumerate().for_each(|(i, p)| {
-            let x = i % image.width() as usize;
-            let y = i / image.width() as usize;
-            let window_x = x / DEFAULT_WINDOW_SIZE as usize;
-            let window_y = y / DEFAULT_WINDOW_SIZE as usize;
-            let idx = window_y * window_cols as usize + window_x;
-            let item = window_caches.get_mut(idx).unwrap();
-            item.sum += p[0] as u16;
-            buffer[item.data_offset] = p[0];
+        image.enumerate_rows().par_bridge().for_each(|(_, row)| {
+            for (x, y, p) in row {
+                let window_x = x / DEFAULT_WINDOW_SIZE;
+                let window_y = y / DEFAULT_WINDOW_SIZE;
+                let idx = window_y * window_cols + window_x;
+                let item = window_caches.get(idx as usize).unwrap();
+                item.sum.fetch_add(p[0] as u16, Ordering::Acquire);
+                unsafe {
+                    uslice.write(item.data_offset, p[0]);
+                }
+            }
         });
 
         LinearAccelerator {
@@ -141,12 +167,12 @@ impl LinearAccelerator {
 pub struct WindowCache {
     pub window: Window,
     pub data_offset: usize,
-    pub sum: u16,
+    pub sum: AtomicU16,
 }
 
 impl WindowCache {
     pub fn mean(&self) -> f64 {
-        self.sum as f64 / self.window.area() as f64
+        self.sum.load(Ordering::Relaxed) as f64 / self.window.area() as f64
     }
 
     pub fn variance(&self, mean: f64, data: &[u8]) -> f64 {

@@ -27,20 +27,21 @@ pub fn ssim_simple(first: &GrayImage, second: &GrayImage) -> Result<GraySimilari
 }
 
 pub fn ssim_cached(first: &GrayImage, second: &GrayImage) -> Result<GraySimilarity, CompareError> {
-    let first_accelerator = LinearAccelerator::mk_cached_subdivision(first);
-    let second_accelerator = LinearAccelerator::mk_cached_subdivision(second);
+    let images = vec![first, second];
 
-    let results = izip!(
-        first_accelerator.windows.iter(),
-        second_accelerator.windows.iter()
-    )
-    .map(|(f, s)| {
-        (
-            ssim_for_cached_windows(f, s, &first_accelerator.buffer, &second_accelerator.buffer),
-            &f.window,
-        )
-    })
-    .collect::<Vec<_>>();
+    let accels: Vec<_> = images
+        .into_par_iter()
+        .map(|i| LinearAccelerator::mk_cached_subdivision(i))
+        .collect();
+
+    let results = izip!(accels[0].windows.iter(), accels[1].windows.iter())
+        .map(|(f, s)| {
+            (
+                ssim_for_cached_windows(f, s, &accels[0].buffer, &accels[1].buffer),
+                &f.window,
+            )
+        })
+        .collect::<Vec<_>>();
     let score = results.iter().map(|r| r.0 * r.1.area() as f64).sum::<f64>()
         / results.iter().map(|r| r.1.area() as f64).sum::<f64>();
 
