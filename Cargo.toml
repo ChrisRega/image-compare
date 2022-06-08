@@ -1,6 +1,6 @@
 [package]
 name = "image-compare"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 authors = ["Christopher Regali <christopher.regali@vdop.org>"]
 license = "MIT"
@@ -21,7 +21,7 @@ itertools = "0.10"
 [dev-dependencies]
 async-trait = "0.1"
 cucumber = "0.13"
-tokio = { version = "1.17", features = ["macros", "rt-multi-thread", "time"] }
+tokio = { version = "1.19", features = ["macros", "rt-multi-thread", "time"] }
 
 [[test]]
 name = "compare"
