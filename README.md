@@ -1,7 +1,9 @@
 # image-compare
+[![Crates.io](https://img.shields.io/image-compare/d/clap?style=flat-square)](https://crates.io/crates/image-compare)
 [![Documentation](https://docs.rs/image-compare/badge.svg)](https://docs.rs/image-compare)
 ![CI](https://github.com/ChrisRega/image-compare/actions/workflows/rust.yml/badge.svg?branch=main "CI")
 [![Coverage Status](https://coveralls.io/repos/github/ChrisRega/image-compare/badge.svg?branch=main)](https://coveralls.io/github/ChrisRega/image-compare?branch=main)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE-MIT)
 
 Simple image comparison in rust based on the image crate
 
