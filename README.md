@@ -1,6 +1,7 @@
 # image-compare
 [![Documentation](https://docs.rs/image-compare/badge.svg)](https://docs.rs/image-compare)
 ![CI](https://github.com/ChrisRega/image-compare/actions/workflows/rust.yml/badge.svg?branch=main "CI")
+[![Coverage Status](https://coveralls.io/repos/github/ChrisRega/image-compare/badge.svg?branch=main)](https://coveralls.io/github/ChrisRega/image-compare?branch=main)
 
 Simple image comparison in rust based on the image crate
 
