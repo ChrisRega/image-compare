@@ -1,22 +1,31 @@
-name: Rust
-
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+        - os: ubuntu-latest
+        - os: windows-latest
+        - os: macos-latest
 
-    runs-on: ubuntu-latest
-
+    name: rust-ci ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
     - name: Build
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
+    - name: Run check
+      run: cargo check --verbose
+    - name: Run clippy
+      run: cargo clippy --verbose
