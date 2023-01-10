@@ -19,7 +19,7 @@ fn merge_similarity_channels_yuv(input: &[GraySimilarityImage; 3]) -> RGBSimilar
         let v = v[0].clamp(0.0, 1.0);
         let color_diff = 1. - (1. - u.powi(2) + 1. - v.powi(2)).sqrt().clamp(0.0, 1.0);
         //f32 for keeping numerical stability for hybrid compare in 0.2.-branch
-        *deviation += y.min(color_diff) as f32;
+        *deviation += y.min(color_diff);
         *rgb = Rgb([1. - y, 1. - u, 1. - v]);
     });
 

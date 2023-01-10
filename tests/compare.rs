@@ -1,14 +1,11 @@
-use std::convert::Infallible;
-
-use async_trait::async_trait;
-use cucumber::{given, then, when, World, WorldInit};
+use cucumber::{given, then, when, World};
 use image::DynamicImage;
 use image_compare::prelude::*;
 use image_compare::Metric;
 extern crate image;
 
 // `World` is your shared, likely mutable state.
-#[derive(Debug, WorldInit)]
+#[derive(Debug, World, Default)]
 pub struct CompareWorld {
     first: Option<DynamicImage>,
     second: Option<DynamicImage>,
@@ -150,20 +147,6 @@ fn check_result_image_rgb(world: &mut CompareWorld, reference: String) {
             .score,
         1.0
     );
-}
-
-#[async_trait(?Send)]
-impl World for CompareWorld {
-    type Error = Infallible;
-
-    async fn new() -> Result<Self, Infallible> {
-        Ok(Self {
-            first: None,
-            second: None,
-            comparison_result: None,
-            comparison_result_rgb: None,
-        })
-    }
 }
 
 #[tokio::main]
