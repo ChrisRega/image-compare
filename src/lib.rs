@@ -42,6 +42,7 @@ mod utils;
 #[doc(hidden)]
 pub mod prelude {
     pub use image::{GrayImage, ImageBuffer, Luma, Rgb, RgbImage};
+    use image::{Rgba, RgbaImage};
     use thiserror::Error;
 
     /// The enum for selecting a grayscale comparison implementation
@@ -63,9 +64,10 @@ pub mod prelude {
 
     /// a single-channel f32 typed image containing a result-score for each pixel
     pub type GraySimilarityImage = ImageBuffer<Luma<f32>, Vec<f32>>;
-
     /// a three-channel f32 typed image containing a result-score per color channel for each pixel
     pub type RGBSimilarityImage = ImageBuffer<Rgb<f32>, Vec<f32>>;
+    /// a four-channel f32 typed image containing a result-score per color channel for each pixel
+    pub type RGBASimilarityImage = ImageBuffer<Rgba<f32>, Vec<f32>>;
 
     #[derive(Debug)]
     /// A struct containing the results of a structure comparison
@@ -82,6 +84,22 @@ pub mod prelude {
 
     pub type GraySimilarity = Similarity<GraySimilarityImage>;
     pub type RGBSimilarity = Similarity<RGBSimilarityImage>;
+    pub type RGBASimilarity = Similarity<RGBASimilarityImage>;
+
+    pub fn to_color_alpha_map(rgba_sim: &RGBASimilarityImage) -> RgbaImage {
+        let mut img_rgba = RgbaImage::new(rgba_sim.width(), rgba_sim.height());
+        for row in 0..rgba_sim.height() {
+            for col in 0..rgba_sim.width() {
+                let pixel = rgba_sim.get_pixel(col, row);
+                let mut new_pixel = [0u8; 4];
+                for channel in 0..4 {
+                    new_pixel[channel] = (pixel[channel].clamp(0., 1.) * 255.) as u8;
+                }
+                img_rgba.put_pixel(col, row, Rgba(new_pixel));
+            }
+        }
+        img_rgba
+    }
 
     pub trait ToGrayScale {
         /// Clamps each input pixel to (0., 1.) and multiplies by 255 before converting to u8.
@@ -230,6 +248,9 @@ pub fn gray_similarity_histogram(
 
 #[doc(inline)]
 pub use hybrid::rgb_hybrid_compare;
+
+#[doc(inline)]
+pub use hybrid::rgba_hybrid_compare;
 
 #[cfg(test)]
 mod tests {

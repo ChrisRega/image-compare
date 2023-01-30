@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use image::GrayImage;
+use image::{GrayImage, RgbaImage};
 use itertools::izip;
 
 /// see https://www.itu.int/rec/T-REC-T.871
@@ -17,6 +17,31 @@ fn yuv_to_rgb(yuv: &[f32; 3]) -> [f32; 3] {
     let g = yuv[0] - (0.344136 * (yuv[1] - 128.)) - (0.714136 * (yuv[2] - 128.));
     let b = yuv[0] + (1.772 * (yuv[1] - 128.));
     [r, b, g]
+}
+
+pub(crate) fn split_rgba_to_yuva(source: &RgbaImage) -> [GrayImage; 4] {
+    let mut y = GrayImage::new(source.width(), source.height());
+    let mut u = y.clone();
+    let mut v = y.clone();
+    let mut a = y.clone();
+
+    izip!(
+        y.pixels_mut(),
+        u.pixels_mut(),
+        v.pixels_mut(),
+        a.pixels_mut(),
+        source.pixels()
+    )
+    .for_each(|(y, u, v, a, rgba)| {
+        let rgba: [f32; 4] = rgba.0.map(|c| c as f32);
+        let yuv = rgb_to_yuv(&rgba[0..3].try_into().unwrap());
+        *y = Luma([yuv[0].clamp(0., 255.) as u8]);
+        *u = Luma([yuv[1].clamp(0., 255.) as u8]);
+        *v = Luma([yuv[2].clamp(0., 255.) as u8]);
+        *a = Luma([rgba[3] as u8]);
+    });
+
+    [y, u, v, a]
 }
 
 pub trait Decompose {
