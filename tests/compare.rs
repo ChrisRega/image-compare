@@ -11,6 +11,7 @@ pub struct CompareWorld {
     second: Option<DynamicImage>,
     comparison_result: Option<GraySimilarity>,
     comparison_result_rgb: Option<RGBSimilarity>,
+    comparison_result_rgba: Option<RGBASimilarity>,
 }
 
 #[given(expr = "the images {string} and {string} are loaded")]
@@ -88,6 +89,16 @@ fn compare_mssim_rgb(world: &mut CompareWorld) {
         .expect("Error comparing the two images!"),
     );
 }
+#[when(expr = "comparing the images using the hybrid mode as rgba")]
+fn compare_hybrid_rgba(world: &mut CompareWorld) {
+    world.comparison_result_rgba = Some(
+        image_compare::rgba_hybrid_compare(
+            &world.first.as_ref().unwrap().clone().into_rgba8(),
+            &world.second.as_ref().unwrap().clone().into_rgba8(),
+        )
+        .expect("Error comparing the two images!"),
+    );
+}
 
 #[when(expr = "comparing the images using the hybrid mode as rgb")]
 fn compare_hybrid_rgb(world: &mut CompareWorld) {
@@ -106,6 +117,8 @@ fn check_result_score(world: &mut CompareWorld, score: f64) {
         assert_eq!(world.comparison_result.as_ref().unwrap().score, score);
     } else if world.comparison_result_rgb.is_some() {
         assert_eq!(world.comparison_result_rgb.as_ref().unwrap().score, score);
+    } else if world.comparison_result_rgba.is_some() {
+        assert_eq!(world.comparison_result_rgba.as_ref().unwrap().score, score);
     } else {
         panic!("No result calculated yet")
     }
@@ -155,4 +168,5 @@ async fn main() {
     CompareWorld::run("tests/features/histogram_gray.feature").await;
     CompareWorld::run("tests/features/structure_rgb.feature").await;
     CompareWorld::run("tests/features/hybrid_rgb.feature").await;
+    CompareWorld::run("tests/features/hybrid_rgba.feature").await;
 }

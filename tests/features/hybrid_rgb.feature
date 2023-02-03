@@ -14,7 +14,7 @@ Then the similarity score is <result>
 Examples:
 | compare_image                           | result                |
 | tests/data/pad_gaprao.png               | 1.0                   |
-| tests/data/pad_gaprao_lighter.png       | 0.8235626302083333    |
-| tests/data/pad_gaprao_noise.png         | 0.12519161783854166   |
-| tests/data/pad_gaprao_gray_inverted.png | 2.7263303597768148e-5 |
-| tests/data/pad_gaprao_color_filters.png | 0.664062109375        |
+| tests/data/pad_gaprao_lighter.png       | 0.948974609375        |
+| tests/data/pad_gaprao_noise.png         | 0.13009302571614584   |
+| tests/data/pad_gaprao_gray_inverted.png | 3.256663878758748e-5  |
+| tests/data/pad_gaprao_color_filters.png | 0.9884529947916667    |

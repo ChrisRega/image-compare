@@ -7,6 +7,7 @@ use itertools::izip;
 fn merge_similarity_channels_yuva(
     input: &[GraySimilarityImage; 4],
     alpha: &GrayImage,
+    alpha_second: &GrayImage,
 ) -> RGBASimilarity {
     let mut image = RGBASimilarityImage::new(input[0].width(), input[0].height());
     let mut deviation = Vec::new();
@@ -18,22 +19,25 @@ fn merge_similarity_channels_yuva(
         input[2].pixels(),
         input[3].pixels(),
         alpha.pixels(),
+        alpha_second.pixels(),
         deviation.iter_mut()
     )
-    .for_each(|(rgba, y, u, v, a_d, alpha_source, deviation)| {
-        let y = y[0].clamp(0.0, 1.0);
-        let u = u[0].clamp(0.0, 1.0);
-        let v = v[0].clamp(0.0, 1.0);
-        let a_d = a_d[0].clamp(0.0, 1.0);
-        let alpha_source = alpha_source[0] as f32 / 255.;
+    .for_each(
+        |(rgba, y, u, v, a_d, alpha_source, alpha_source_second, deviation)| {
+            let y = y[0].clamp(0.0, 1.0);
+            let u = u[0].clamp(0.0, 1.0);
+            let v = v[0].clamp(0.0, 1.0);
+            let a_d = a_d[0].clamp(0.0, 1.0);
+            let alpha_source =
+                (alpha_source[0] as f32 + alpha_source_second[0] as f32) / (2. * 255.);
 
-        let squared_color_similarity = ((1. - u).powi(2) + (1. - v).powi(2)).sqrt().clamp(0.0, 1.0);
-        let color_diff = 1. - squared_color_similarity;
-        //the lower the alpha the less differences are visible in color and structure
-        let min_sim = y.min(color_diff).min(a_d);
-        *deviation += 1. - alpha_source + min_sim * alpha_source;
-        *rgba = Rgba([1. - y, 1. - u, 1. - v, 1. - a_d]);
-    });
+            let color_diff = ((u).powi(2) + (v).powi(2)).sqrt().clamp(0.0, 1.0);
+            //the lower the alpha the less differences are visible in color and structure
+            let min_sim = y.min(color_diff).min(a_d);
+            *deviation += 1. - alpha_source + min_sim * alpha_source;
+            *rgba = Rgba([1. - y, 1. - u, 1. - v, 1. - a_d]);
+        },
+    );
 
     let score = deviation.iter().sum::<f32>() as f64 / deviation.len() as f64;
     RGBASimilarity { image, score }
@@ -54,7 +58,7 @@ fn merge_similarity_channels_yuv(input: &[GraySimilarityImage; 3]) -> RGBSimilar
         let y = y[0].clamp(0.0, 1.0);
         let u = u[0].clamp(0.0, 1.0);
         let v = v[0].clamp(0.0, 1.0);
-        let color_diff = 1. - ((1. - u).powi(2) + (1. - v).powi(2)).sqrt().clamp(0.0, 1.0);
+        let color_diff = ((u).powi(2) + (v).powi(2)).sqrt().clamp(0.0, 1.0);
         //f32 for keeping numerical stability for hybrid compare in 0.2.-branch
         *deviation += y.min(color_diff);
         *rgb = Rgb([1. - y, 1. - u, 1. - v]);
@@ -93,7 +97,9 @@ pub fn rgba_hybrid_compare(
         alpha_result.image,
     ];
 
-    Ok(merge_similarity_channels_yuva(&results, &first[3]))
+    Ok(merge_similarity_channels_yuva(
+        &results, &first[3], &second[3],
+    ))
 }
 
 /// Comparing structure via MSSIM on Y channel, comparing color-diff-vectors on U and V summing the squares

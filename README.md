@@ -27,7 +27,7 @@ SIMD is under investigation on a feature branch (simd-experimental).
     - Processing the Y channel with MSSIM
     - Comparing U and V channels via RMS
     - Recombining the differences to a nice visualization image
-    - Score is calculated as: <img src="https://render.githubusercontent.com/render/math?math=\mathrm{score}=\mathrm{avg}_{x,y}\left(\mathrm{min}\left[\Delta \mathrm{MSSIM}(x,y),1- \sqrt{(1-\Delta RMS(u,x,y))^2 + (1-\Delta RMS(v,x,y))^2}\right]\right)">
+    - Score is calculated as: $\mathrm{score}=\mathrm{avg}_{x,y}\left(\mathrm{min}\left[\Delta \mathrm{MSSIM}(x,y),\sqrt{(\Delta RMS(u,x,y))^2 + (\Delta RMS(v,x,y))^2}\right]\right)$
     - This allows for a good separation of color differences and structure differences
 - Comparing grayscale images by histogram
   - Several distance metrics implemented see [OpenCV docs](https://docs.opencv.org/4.5.5/d8/dc8/tutorial_histogram_comparison.html):
