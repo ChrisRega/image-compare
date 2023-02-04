@@ -28,14 +28,13 @@ fn merge_similarity_channels_yuva(
             let u = u[0].clamp(0.0, 1.0);
             let v = v[0].clamp(0.0, 1.0);
             let a_d = a_d[0].clamp(0.0, 1.0);
-            let alpha_source =
-                (alpha_source[0] as f32 + alpha_source_second[0] as f32) / (2. * 255.);
+            let alpha_bar = (alpha_source[0] as f32 + alpha_source_second[0] as f32) / (2. * 255.);
 
             let color_diff = ((u).powi(2) + (v).powi(2)).sqrt().clamp(0.0, 1.0);
             //the lower the alpha the less differences are visible in color and structure
             let min_sim = y.min(color_diff).min(a_d);
-            *deviation += 1. - alpha_source + min_sim * alpha_source;
-            *rgba = Rgba([1. - y, 1. - u, 1. - v, 1. - a_d]);
+            *deviation += 1. - alpha_bar + min_sim * alpha_bar;
+            *rgba = Rgba([1. - y, 1. - u, 1. - v, a_d]);
         },
     );
 

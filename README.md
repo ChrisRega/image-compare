@@ -7,9 +7,10 @@
 
 Simple image comparison in rust based on the image crate
 
-Note that this crate is heavily work in progress. Algorithms are neither cross-checked not particularly fast yet.
-Everything is implemented in plain CPU with rayon multithreading. 
-SIMD is under investigation on a feature branch (simd-experimental).
+Note that this crate is still work in progress. 
+Algorithms are not cross-checked.
+Everything is implemented in plain CPU with rayon multithreading and seems to perform just fine on modern processors.
+Neither [memory optimizations](https://actix.vdop.org/view_post?post_num=10) nor [SIMD](https://actix.vdop.org/view_post?post_num=8) seemed to provide any remarkable improvement.
 
 ### Supported now:
 - Comparing grayscale and rgb images by structure
@@ -32,6 +33,9 @@ SIMD is under investigation on a feature branch (simd-experimental).
     - The average alpha of each pixel $\bar{alpha}(x,y) = 1/2 (\alpha_1(x,y) + \alpha_2(x,y))$ is then used as a linear weighting factor
     - RGBA Score is calculated as: $\mathrm{score}=\mathrm{avg}_{x,y}\left(\bar{\alpha} \cdot \mathrm{min}\left[\Delta \mathrm{MSSIM}(Y,x,y),\sqrt{(\Delta RMS(U,x,y))^2 + (\Delta RMS(V,x,y))^2}, \Delta \mathrm{MSSIM}(\alpha,x,y)\right]\right)$
     - This allows for a good separation of color differences and structure differences for both RGB and RGBA
+    - Interpretation of the diff-images:
+      - RGB: Red contains structure differences, Green and Blue the color differences, the more color, the higher the diff
+      - RGBA: Same as RGB but alpha contains the inverse of the alpha-diffs. If something is heavily translucent, the alpha was so different, that differentiating between color and structure difference would be difficult.
 - Comparing grayscale images by histogram
   - Several distance metrics implemented see [OpenCV docs](https://docs.opencv.org/4.5.5/d8/dc8/tutorial_histogram_comparison.html):
     - Correlation $d(H_1,H_2) = \frac{\sum_I (H_1(I) - \bar{H_1}) (H_2(I) - \bar{H_2})}{\sqrt{\sum_I(H_1(I) - \bar{H_1})^2 \sum_I(H_2(I) - \bar{H_2})^2}}$

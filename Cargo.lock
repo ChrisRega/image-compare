@@ -657,7 +657,7 @@ dependencies = [
 
 [[package]]
 name = "image-compare"
-version = "0.2.4"
+version = "0.3.0-Alpha1"
 dependencies = [
  "cucumber",
  "image",

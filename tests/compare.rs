@@ -143,6 +143,20 @@ fn check_result_image(world: &mut CompareWorld, reference: String) {
     );
 }
 
+#[then(expr = "the rgba similarity image matches {string}")]
+fn check_result_image_rgba(world: &mut CompareWorld, reference: String) {
+    let img = to_color_alpha_map(&world.comparison_result_rgba.as_ref().unwrap().image);
+    let image_one = image::open(reference)
+        .expect("Could not find reference-image")
+        .into_rgba8();
+    assert_eq!(
+        image_compare::rgba_hybrid_compare(&img, &image_one)
+            .expect("Could not compare")
+            .score,
+        1.0
+    );
+}
+
 #[then(expr = "the rgb similarity image matches {string}")]
 fn check_result_image_rgb(world: &mut CompareWorld, reference: String) {
     let img = world

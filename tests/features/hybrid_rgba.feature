@@ -1,9 +1,9 @@
 Feature: RGBA image comparison using hybrid mode - MSSIM for for Y, Alpha channels, RMS for U and V
 
   Scenario: Comparing an image to the original with hybrid mode and checking the difference image
-    Given the images 'tests/data/colored_primitives.png' and 'tests/data/colored_primitives_alpha.png' are loaded
+    Given the images 'tests/data/colored_primitives_swapped_alpha.png' and 'tests/data/colored_primitives_alpha.png' are loaded
     When comparing the images using the hybrid mode as rgba
-    Then the rgba similarity image matches 'tests/data/colored_primitives_hybrid_compare_rgb.png'
+    Then the rgba similarity image matches 'tests/data/colored_primitives_hybrid_compare_rgba.png'
 
 
   Scenario Outline: Comparing a modified image to the original using hybrid mode algorithm
