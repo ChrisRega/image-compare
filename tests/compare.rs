@@ -145,7 +145,12 @@ fn check_result_image(world: &mut CompareWorld, reference: String) {
 
 #[then(expr = "the rgba similarity image matches {string}")]
 fn check_result_image_rgba(world: &mut CompareWorld, reference: String) {
-    let img = to_color_alpha_map(&world.comparison_result_rgba.as_ref().unwrap().image);
+    let img = world
+        .comparison_result_rgba
+        .as_ref()
+        .unwrap()
+        .image
+        .to_color_map();
     let image_one = image::open(reference)
         .expect("Could not find reference-image")
         .into_rgba8();

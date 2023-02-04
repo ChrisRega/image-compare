@@ -86,19 +86,27 @@ pub mod prelude {
     pub type RGBSimilarity = Similarity<RGBSimilarityImage>;
     pub type RGBASimilarity = Similarity<RGBASimilarityImage>;
 
-    pub fn to_color_alpha_map(rgba_sim: &RGBASimilarityImage) -> RgbaImage {
-        let mut img_rgba = RgbaImage::new(rgba_sim.width(), rgba_sim.height());
-        for row in 0..rgba_sim.height() {
-            for col in 0..rgba_sim.width() {
-                let pixel = rgba_sim.get_pixel(col, row);
-                let mut new_pixel = [0u8; 4];
-                for channel in 0..4 {
-                    new_pixel[channel] = (pixel[channel].clamp(0., 1.) * 255.) as u8;
+    pub trait ToRGBAColorMap {
+        /// Clamps each input pixel's channel-values to (0., 1.) and multiplies them by 255 before converting to an Rgba8-Image.
+        /// See tests/data/*_compare_rgba.png images for examples.
+        fn to_color_map(&self) -> RgbaImage;
+    }
+
+    impl ToRGBAColorMap for RGBASimilarityImage {
+        fn to_color_map(&self) -> RgbaImage {
+            let mut img_rgba = RgbaImage::new(self.width(), self.height());
+            for row in 0..self.height() {
+                for col in 0..self.width() {
+                    let pixel = self.get_pixel(col, row);
+                    let mut new_pixel = [0u8; 4];
+                    for channel in 0..4 {
+                        new_pixel[channel] = (pixel[channel].clamp(0., 1.) * 255.) as u8;
+                    }
+                    img_rgba.put_pixel(col, row, Rgba(new_pixel));
                 }
-                img_rgba.put_pixel(col, row, Rgba(new_pixel));
             }
+            img_rgba
         }
-        img_rgba
     }
 
     pub trait ToGrayScale {
