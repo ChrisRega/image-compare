@@ -49,3 +49,4 @@ Changelog:
 - An error was found in hybrid RGB compare in 0.2.x that over-weighted color differences. Numbers in tests were adjusted
   - Influence was very small for most images but noticeable for the color-filtered one which yields much higher similarity now
 - Added an idea for RGBA comparison
+- Added github inline latex for equations instead of embedded images - fixes dark theme rendering
