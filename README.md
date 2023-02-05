@@ -16,7 +16,7 @@ Neither [memory optimizations](https://actix.vdop.org/view_post?post_num=10) nor
 - Comparing grayscale and rgb images by structure
   - By RMS - score is calculated by: $1-\sqrt{\frac{\sum_{x,y=0}^{x,y=w,h}\left(f(x,y)-g(x,y)\right)^2}{w*h}}$
   - By MSSIM
-    - SSIM is implemented as described on [wikipedia](https://en.wikipedia.org/wiki/Structural_similarity): $ \mathrm{SSIM}(x,y)={\frac{(2\mu_{x}\mu_{y}+c_{1})(2\sigma_{xy}+c_{2})}{(\mu_{x}^{2}+\mu_{y}^{2}+c_{1})(\sigma_{x}^{2}+\sigma_{y}^{2}+c_{2})}} $ 
+    - SSIM is implemented as described on [wikipedia](https://en.wikipedia.org/wiki/Structural_similarity): $\mathrm{SSIM}(x,y)={\frac{(2\mu_{x}\mu_{y}+c_{1})(2\sigma_{xy}+c_{2})}{(\mu_{x}^{2}+\mu_{y}^{2}+c_{1})(\sigma_{x}^{2}+\sigma_{y}^{2}+c_{2})}}$ 
     - MSSIM is calculated by using 8x8 pixel windows for SSIM and averaging over the results
   - RGB type images are split to R,G and B channels and processed separately. 
     - The worst of the color results is propagated as score but a float-typed RGB image provides access to all values.
