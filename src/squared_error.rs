@@ -1,10 +1,11 @@
+use crate::colorization::GraySimilarityImage;
 use crate::prelude::*;
 use itertools::izip;
 
-pub fn root_mean_squared_error_simple(
+pub(crate) fn root_mean_squared_error_simple(
     first: &GrayImage,
     second: &GrayImage,
-) -> Result<GraySimilarity, CompareError> {
+) -> Result<(f64, GraySimilarityImage), CompareError> {
     let dimension = first.dimensions();
     let mut image = GraySimilarityImage::new(dimension.0, dimension.1);
     let iter = izip!(first.pixels(), second.pixels(), image.pixels_mut());
@@ -23,7 +24,7 @@ pub fn root_mean_squared_error_simple(
             .sum::<f64>()
             / (image.pixels().len() as f64))
             .sqrt();
-    Ok(GraySimilarity { image, score })
+    Ok((score, image))
 }
 
 #[cfg(test)]
@@ -37,9 +38,9 @@ mod tests {
 
         first.fill(0);
         second.fill(10);
-        let comparison =
+        let (_, comparison) =
             root_mean_squared_error_simple(&first, &second).expect("Do not expect error here");
-        assert_eq!(comparison.image.get_pixel(0, 0)[0], 1. - (10. / (255.0f32)));
+        assert_eq!(comparison.get_pixel(0, 0)[0], 1. - (10. / (255.0f32)));
     }
 
     #[test]
@@ -49,10 +50,10 @@ mod tests {
 
         first.fill(0);
         second.fill(0);
-        let comparison =
+        let (score, comparison) =
             root_mean_squared_error_simple(&first, &second).expect("Do not expect error here");
-        assert_eq!(comparison.image.get_pixel(0, 0)[0], 1.);
-        assert_eq!(comparison.score, 1.);
+        assert_eq!(comparison.get_pixel(0, 0)[0], 1.);
+        assert_eq!(score, 1.);
     }
 
     #[test]
@@ -62,10 +63,10 @@ mod tests {
 
         first.fill(0);
         second.fill(255);
-        let comparison =
+        let (score, comparison) =
             root_mean_squared_error_simple(&first, &second).expect("Do not expect error here");
-        assert_eq!(comparison.image.get_pixel(0, 0)[0], 0.);
-        assert_eq!(comparison.score, 0.);
+        assert_eq!(comparison.get_pixel(0, 0)[0], 0.);
+        assert_eq!(score, 0.);
     }
 
     #[test]
@@ -79,10 +80,10 @@ mod tests {
         second.fill(0);
         second.put_pixel(1, 1, Luma([127]));
 
-        let comparison =
+        let (comparison, _) =
             root_mean_squared_error_simple(&first, &second).expect("Do not expect error here");
 
         let result = 1. - ((127. / 255.0f64).powi(2) / (width * height) as f64).sqrt();
-        assert!((comparison.score - result).abs() < 1e-5);
+        assert!((comparison - result).abs() < 1e-5);
     }
 }

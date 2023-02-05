@@ -9,9 +9,9 @@ extern crate image;
 pub struct CompareWorld {
     first: Option<DynamicImage>,
     second: Option<DynamicImage>,
-    comparison_result: Option<GraySimilarity>,
-    comparison_result_rgb: Option<RGBSimilarity>,
-    comparison_result_rgba: Option<RGBASimilarity>,
+    comparison_result: Option<Similarity>,
+    comparison_result_rgb: Option<Similarity>,
+    comparison_result_rgba: Option<Similarity>,
 }
 
 #[given(expr = "the images {string} and {string} are loaded")]
@@ -55,14 +55,14 @@ fn compare_hist_corr(world: &mut CompareWorld, metric: String) {
         "hellinger distance" => Metric::Hellinger,
         _ => panic!(),
     };
-    world.comparison_result = Some(GraySimilarity {
+    world.comparison_result = Some(Similarity {
         score: image_compare::gray_similarity_histogram(
             metric,
             &world.first.as_ref().unwrap().clone().into_luma8(),
             &world.second.as_ref().unwrap().clone().into_luma8(),
         )
         .expect("Error comparing the two images!"),
-        image: GraySimilarityImage::new(1, 1),
+        image: None,
     });
 }
 
@@ -131,7 +131,10 @@ fn check_result_image(world: &mut CompareWorld, reference: String) {
         .as_ref()
         .unwrap()
         .image
-        .to_grayscale();
+        .as_ref()
+        .unwrap()
+        .to_color_map()
+        .into_luma8();
     let image_one = image::open(reference)
         .expect("Could not find reference-image")
         .into_luma8();
@@ -150,7 +153,10 @@ fn check_result_image_rgba(world: &mut CompareWorld, reference: String) {
         .as_ref()
         .unwrap()
         .image
-        .to_color_map();
+        .as_ref()
+        .unwrap()
+        .to_color_map()
+        .into_rgba8();
     let image_one = image::open(reference)
         .expect("Could not find reference-image")
         .into_rgba8();
@@ -169,7 +175,10 @@ fn check_result_image_rgb(world: &mut CompareWorld, reference: String) {
         .as_ref()
         .unwrap()
         .image
-        .to_color_map();
+        .as_ref()
+        .unwrap()
+        .to_color_map()
+        .into_rgb8();
     let image_one = image::open(reference)
         .expect("Could not find reference-image")
         .into_rgb8();

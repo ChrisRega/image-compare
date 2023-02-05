@@ -1,3 +1,4 @@
+use crate::colorization::GraySimilarityImage;
 use crate::prelude::*;
 use crate::utils::{draw_window_to_image, Window};
 use rayon::prelude::*;
@@ -9,7 +10,10 @@ const L: u8 = u8::MAX;
 const C1: f64 = (K1 * L as f64) * (K1 * L as f64);
 const C2: f64 = (K2 * L as f64) * (K2 * L as f64);
 
-pub fn ssim_simple(first: &GrayImage, second: &GrayImage) -> Result<GraySimilarity, CompareError> {
+pub(crate) fn ssim_simple(
+    first: &GrayImage,
+    second: &GrayImage,
+) -> Result<(f64, GraySimilarityImage), CompareError> {
     let dimension = first.dimensions();
     let mut image = GraySimilarityImage::new(dimension.0, dimension.1);
     let window = Window::from_image(first);
@@ -25,7 +29,7 @@ pub fn ssim_simple(first: &GrayImage, second: &GrayImage) -> Result<GraySimilari
         .iter()
         .for_each(|r| draw_window_to_image(r.1, &mut image, r.0 as f32));
 
-    Ok(GraySimilarity { image, score })
+    Ok((score, image))
 }
 
 fn ssim_for_window(first: &GrayImage, second: &GrayImage, window: &Window) -> f64 {

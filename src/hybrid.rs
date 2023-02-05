@@ -1,6 +1,9 @@
+use crate::colorization::{GraySimilarityImage, RGBASimilarityImage, RGBSimilarityImage};
 use crate::prelude::*;
+use crate::squared_error::root_mean_squared_error_simple;
+use crate::ssim::ssim_simple;
 use crate::utils::split_rgba_to_yuva;
-use crate::{gray_similarity_structure, Decompose};
+use crate::{gray_similarity_structure, squared_error, ssim, Decompose};
 use image::{Rgba, RgbaImage};
 use itertools::izip;
 
@@ -8,7 +11,7 @@ fn merge_similarity_channels_yuva(
     input: &[GraySimilarityImage; 4],
     alpha: &GrayImage,
     alpha_second: &GrayImage,
-) -> RGBASimilarity {
+) -> Similarity {
     let mut image = RGBASimilarityImage::new(input[0].width(), input[0].height());
     let mut deviation = Vec::new();
     deviation.resize((input[0].width() * input[0].height()) as usize, 0.0);
@@ -39,10 +42,13 @@ fn merge_similarity_channels_yuva(
     );
 
     let score = deviation.iter().sum::<f32>() as f64 / deviation.len() as f64;
-    RGBASimilarity { image, score }
+    Similarity {
+        image: Some(image.into()),
+        score,
+    }
 }
 
-fn merge_similarity_channels_yuv(input: &[GraySimilarityImage; 3]) -> RGBSimilarity {
+fn merge_similarity_channels_yuv(input: &[GraySimilarityImage; 3]) -> Similarity {
     let mut image = RGBSimilarityImage::new(input[0].width(), input[0].height());
     let mut deviation = Vec::new();
     deviation.resize((input[0].width() * input[0].height()) as usize, 0.0);
@@ -64,7 +70,10 @@ fn merge_similarity_channels_yuv(input: &[GraySimilarityImage; 3]) -> RGBSimilar
     });
 
     let score = deviation.iter().sum::<f32>() as f64 / deviation.len() as f64;
-    RGBSimilarity { image, score }
+    Similarity {
+        image: Some(image.into()),
+        score,
+    }
 }
 
 /// Hybrid comparison for RGBA images.
@@ -75,7 +84,7 @@ fn merge_similarity_channels_yuv(input: &[GraySimilarityImage; 3]) -> RGBSimilar
 pub fn rgba_hybrid_compare(
     first: &RgbaImage,
     second: &RgbaImage,
-) -> Result<RGBASimilarity, CompareError> {
+) -> Result<Similarity, CompareError> {
     if first.dimensions() != second.dimensions() {
         return Err(CompareError::DimensionsDiffer);
     }
@@ -83,18 +92,13 @@ pub fn rgba_hybrid_compare(
     let first = split_rgba_to_yuva(first);
     let second = split_rgba_to_yuva(second);
 
-    let mssim_result = gray_similarity_structure(&Algorithm::MSSIMSimple, &first[0], &second[0])?;
-    let u_result = gray_similarity_structure(&Algorithm::RootMeanSquared, &first[1], &second[1])?;
-    let v_result = gray_similarity_structure(&Algorithm::RootMeanSquared, &first[2], &second[2])?;
+    let (_, mssim_result) = ssim_simple(&first[0], &second[0])?;
+    let (_, u_result) = root_mean_squared_error_simple(&first[1], &second[1])?;
+    let (_, v_result) = root_mean_squared_error_simple(&first[2], &second[2])?;
 
-    let alpha_result = gray_similarity_structure(&Algorithm::MSSIMSimple, &first[3], &second[3])?;
+    let (_, alpha_result) = ssim_simple(&first[3], &second[3])?;
 
-    let results = [
-        mssim_result.image,
-        u_result.image,
-        v_result.image,
-        alpha_result.image,
-    ];
+    let results = [mssim_result, u_result, v_result, alpha_result];
 
     Ok(merge_similarity_channels_yuva(
         &results, &first[3], &second[3],
@@ -109,33 +113,20 @@ pub fn rgba_hybrid_compare(
 /// This leads to a nice visualization of color and structure differences - with structural differences (meaning gray mssim diffs) leading to red rectangles
 /// and and the u and v color diffs leading to color-deviations in green, blue and cyan
 /// All-black meaning no differences
-pub fn rgb_hybrid_compare(
-    first: &RgbImage,
-    second: &RgbImage,
-) -> Result<RGBSimilarity, CompareError> {
+pub fn rgb_hybrid_compare(first: &RgbImage, second: &RgbImage) -> Result<Similarity, CompareError> {
     if first.dimensions() != second.dimensions() {
         return Err(CompareError::DimensionsDiffer);
     }
 
     let first_channels = first.split_to_yuv();
     let second_channels = second.split_to_yuv();
-    let mssim_result = gray_similarity_structure(
-        &Algorithm::MSSIMSimple,
-        &first_channels[0],
-        &second_channels[0],
-    )?;
-    let u_result = gray_similarity_structure(
-        &Algorithm::RootMeanSquared,
-        &first_channels[1],
-        &second_channels[1],
-    )?;
-    let v_result = gray_similarity_structure(
-        &Algorithm::RootMeanSquared,
-        &first_channels[2],
-        &second_channels[2],
-    )?;
+    let (_, mssim_result) = ssim::ssim_simple(&first_channels[0], &second_channels[0])?;
+    let (_, u_result) =
+        squared_error::root_mean_squared_error_simple(&first_channels[1], &second_channels[1])?;
+    let (_, v_result) =
+        squared_error::root_mean_squared_error_simple(&first_channels[2], &second_channels[2])?;
 
-    let results = [mssim_result.image, u_result.image, v_result.image];
+    let results = [mssim_result, u_result, v_result];
 
     Ok(merge_similarity_channels_yuv(&results))
 }

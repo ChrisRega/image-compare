@@ -33,6 +33,7 @@
 #![warn(unused_qualifications)]
 #![deny(deprecated)]
 
+mod colorization;
 mod histogram;
 mod hybrid;
 mod squared_error;
@@ -42,9 +43,7 @@ mod utils;
 #[doc(hidden)]
 pub mod prelude {
     pub use image::{GrayImage, ImageBuffer, Luma, Rgb, RgbImage};
-    use image::{Rgba, RgbaImage};
     use thiserror::Error;
-
     /// The enum for selecting a grayscale comparison implementation
     pub enum Algorithm {
         /// A simple RMSE implementation - will return: <img src="https://render.githubusercontent.com/render/math?math=1-\sqrt{\frac{(\sum_{x,y=0}^{x,y=w,h}\left(f(x,y)-g(x,y)\right)^2)}{w*h}}">
@@ -62,94 +61,7 @@ pub mod prelude {
         CalculationFailed(String),
     }
 
-    /// a single-channel f32 typed image containing a result-score for each pixel
-    pub type GraySimilarityImage = ImageBuffer<Luma<f32>, Vec<f32>>;
-    /// a three-channel f32 typed image containing a result-score per color channel for each pixel
-    pub type RGBSimilarityImage = ImageBuffer<Rgb<f32>, Vec<f32>>;
-    /// a four-channel f32 typed image containing a result-score per color channel for each pixel
-    pub type RGBASimilarityImage = ImageBuffer<Rgba<f32>, Vec<f32>>;
-
-    #[derive(Debug)]
-    /// A struct containing the results of a structure comparison
-    pub struct Similarity<I> {
-        /// Contains the resulting differences per pixel if applicable
-        /// The buffer will contain the resulting values of the respective algorithms:
-        /// - RMS will be between 0. for all-white vs all-black and 1.0 for identical
-        /// - SSIM usually is near 1. for similar, near 0. for different but can take on negative values for negative covariances
-        /// - Hybrid mode will be inverse: 0. means no difference, 1.0 is maximum difference. For details see [`crate::hybrid::rgb_hybrid_compare`]
-        pub image: I,
-        /// the averaged resulting score
-        pub score: f64,
-    }
-
-    pub type GraySimilarity = Similarity<GraySimilarityImage>;
-    pub type RGBSimilarity = Similarity<RGBSimilarityImage>;
-    pub type RGBASimilarity = Similarity<RGBASimilarityImage>;
-
-    pub trait ToRGBAColorMap {
-        /// Clamps each input pixel's channel-values to (0., 1.) and multiplies them by 255 before converting to an Rgba8-Image.
-        /// See tests/data/*_compare_rgba.png images for examples.
-        fn to_color_map(&self) -> RgbaImage;
-    }
-
-    impl ToRGBAColorMap for RGBASimilarityImage {
-        fn to_color_map(&self) -> RgbaImage {
-            let mut img_rgba = RgbaImage::new(self.width(), self.height());
-            for row in 0..self.height() {
-                for col in 0..self.width() {
-                    let pixel = self.get_pixel(col, row);
-                    let mut new_pixel = [0u8; 4];
-                    for channel in 0..4 {
-                        new_pixel[channel] = (pixel[channel].clamp(0., 1.) * 255.) as u8;
-                    }
-                    img_rgba.put_pixel(col, row, Rgba(new_pixel));
-                }
-            }
-            img_rgba
-        }
-    }
-
-    pub trait ToGrayScale {
-        /// Clamps each input pixel to (0., 1.) and multiplies by 255 before converting to u8.
-        /// See tests/data/*_compare.png images for examples
-        fn to_grayscale(&self) -> GrayImage;
-    }
-
-    impl ToGrayScale for GraySimilarityImage {
-        fn to_grayscale(&self) -> GrayImage {
-            let mut img_gray = GrayImage::new(self.width(), self.height());
-            for row in 0..self.height() {
-                for col in 0..self.width() {
-                    let new_val = self.get_pixel(col, row)[0].clamp(0., 1.) * 255.;
-                    img_gray.put_pixel(col, row, Luma([new_val as u8]));
-                }
-            }
-            img_gray
-        }
-    }
-
-    pub trait ToColorMap {
-        /// Clamps each input pixel's channel-values to (0., 1.) and multiplies them by 255 before converting to an Rgb8-Image.
-        /// See tests/data/*_compare_rgb.png images for examples.
-        fn to_color_map(&self) -> RgbImage;
-    }
-
-    impl ToColorMap for RGBSimilarityImage {
-        fn to_color_map(&self) -> RgbImage {
-            let mut img_rgb = RgbImage::new(self.width(), self.height());
-            for row in 0..self.height() {
-                for col in 0..self.width() {
-                    let pixel = self.get_pixel(col, row);
-                    let mut new_pixel = [0u8; 3];
-                    for channel in 0..3 {
-                        new_pixel[channel] = (pixel[channel].clamp(0., 1.) * 255.) as u8;
-                    }
-                    img_rgb.put_pixel(col, row, Rgb(new_pixel));
-                }
-            }
-            img_rgb
-        }
-    }
+    pub use crate::colorization::Similarity;
 }
 
 #[doc(inline)]
@@ -159,16 +71,7 @@ pub use prelude::Algorithm;
 #[doc(inline)]
 pub use prelude::CompareError;
 #[doc(inline)]
-pub use prelude::GraySimilarity;
-#[doc(inline)]
-pub use prelude::GraySimilarityImage;
-#[doc(inline)]
-pub use prelude::RGBSimilarity;
-#[doc(inline)]
-pub use prelude::RGBSimilarityImage;
-
-pub use prelude::ToColorMap;
-pub use prelude::ToGrayScale;
+pub use prelude::Similarity;
 
 use prelude::*;
 use utils::Decompose;
@@ -186,14 +89,18 @@ pub fn gray_similarity_structure(
     algorithm: &Algorithm,
     first: &GrayImage,
     second: &GrayImage,
-) -> Result<GraySimilarity, CompareError> {
+) -> Result<Similarity, CompareError> {
     if first.dimensions() != second.dimensions() {
         return Err(CompareError::DimensionsDiffer);
     }
     match algorithm {
-        Algorithm::RootMeanSquared => squared_error::root_mean_squared_error_simple(first, second),
-        Algorithm::MSSIMSimple => ssim::ssim_simple(first, second),
+        Algorithm::RootMeanSquared => root_mean_squared_error_simple(first, second),
+        Algorithm::MSSIMSimple => ssim_simple(first, second),
     }
+    .map(|(score, i)| Similarity {
+        image: Some(i.into()),
+        score,
+    })
 }
 
 /// Comparing rgb images using structure.
@@ -213,7 +120,7 @@ pub fn rgb_similarity_structure(
     algorithm: &Algorithm,
     first: &RgbImage,
     second: &RgbImage,
-) -> Result<RGBSimilarity, CompareError> {
+) -> Result<Similarity, CompareError> {
     if first.dimensions() != second.dimensions() {
         return Err(CompareError::DimensionsDiffer);
     }
@@ -223,16 +130,28 @@ pub fn rgb_similarity_structure(
     let mut results = Vec::new();
 
     for channel in 0..3 {
-        results.push(gray_similarity_structure(
-            algorithm,
-            &first_channels[channel],
-            &second_channels[channel],
-        )?);
+        match algorithm {
+            Algorithm::RootMeanSquared => {
+                results.push(root_mean_squared_error_simple(
+                    &first_channels[channel],
+                    &second_channels[channel],
+                )?);
+            }
+            Algorithm::MSSIMSimple => {
+                results.push(ssim_simple(
+                    &first_channels[channel],
+                    &second_channels[channel],
+                )?);
+            }
+        }
     }
-    let input = results.iter().map(|r| &r.image).collect::<Vec<_>>();
+    let input = results.iter().map(|(_, i)| i).collect::<Vec<_>>();
     let image = utils::merge_similarity_channels(&input.try_into().unwrap());
-    let score = results.iter().map(|r| r.score).fold(1., f64::min);
-    Ok(RGBSimilarity { image, score })
+    let score = results.iter().map(|(s, _)| *s).fold(1., f64::min);
+    Ok(Similarity {
+        image: Some(image.into()),
+        score,
+    })
 }
 
 /// Comparing gray images using histogram
@@ -257,6 +176,8 @@ pub fn gray_similarity_histogram(
 #[doc(inline)]
 pub use hybrid::rgb_hybrid_compare;
 
+use crate::squared_error::root_mean_squared_error_simple;
+use crate::ssim::ssim_simple;
 #[doc(inline)]
 pub use hybrid::rgba_hybrid_compare;
 
