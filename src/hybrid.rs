@@ -3,7 +3,7 @@ use crate::prelude::*;
 use crate::squared_error::root_mean_squared_error_simple;
 use crate::ssim::ssim_simple;
 use crate::utils::split_rgba_to_yuva;
-use crate::{gray_similarity_structure, squared_error, ssim, Decompose};
+use crate::Decompose;
 use image::{Rgba, RgbaImage};
 use itertools::izip;
 
@@ -12,6 +12,8 @@ fn merge_similarity_channels_yuva(
     alpha: &GrayImage,
     alpha_second: &GrayImage,
 ) -> Similarity {
+    const ALPHA_VIS_MIN: f32 = 0.1;
+
     let mut image = RGBASimilarityImage::new(input[0].width(), input[0].height());
     let mut deviation = Vec::new();
     deviation.resize((input[0].width() * input[0].height()) as usize, 0.0);
@@ -32,12 +34,25 @@ fn merge_similarity_channels_yuva(
             let v = v[0].clamp(0.0, 1.0);
             let a_d = a_d[0].clamp(0.0, 1.0);
             let alpha_bar = (alpha_source[0] as f32 + alpha_source_second[0] as f32) / (2. * 255.);
+            let alpha_bar = if alpha_bar.is_finite() {
+                alpha_bar
+            } else {
+                1.0
+            };
 
             let color_diff = ((u).powi(2) + (v).powi(2)).sqrt().clamp(0.0, 1.0);
-            //the lower the alpha the less differences are visible in color and structure
             let min_sim = y.min(color_diff).min(a_d);
-            *deviation += 1. - alpha_bar + min_sim * alpha_bar;
-            *rgba = Rgba([1. - y, 1. - u, 1. - v, a_d]);
+            //the lower the alpha the less differences are visible in color and structure (and alpha)
+
+            let dev = if alpha_bar > 0. {
+                (min_sim / alpha_bar).clamp(0., 1.)
+            } else {
+                0.0
+            };
+            let alpha_vis = (ALPHA_VIS_MIN + a_d * (1.0 - ALPHA_VIS_MIN)).clamp(0., 1.);
+
+            *deviation = dev;
+            *rgba = Rgba([1. - y, 1. - u, 1. - v, alpha_vis]);
         },
     );
 
@@ -77,10 +92,10 @@ fn merge_similarity_channels_yuv(input: &[GraySimilarityImage; 3]) -> Similarity
 }
 
 /// Hybrid comparison for RGBA images.
-/// Will do MSSIM on luma and alpha, then RMS on U and V channels.
+/// Will do MSSIM on luma, then RMS on U and V and alpha channels.
 /// The calculation of the score is then pixel-wise the minimum of each pixels similarity.
 /// To account for perceived indifference in lower alpha regions, this down-weights the difference
-/// linearly with the alpha channel.
+/// linearly with mean alpha channel.
 pub fn rgba_hybrid_compare(
     first: &RgbaImage,
     second: &RgbaImage,
@@ -96,7 +111,7 @@ pub fn rgba_hybrid_compare(
     let (_, u_result) = root_mean_squared_error_simple(&first[1], &second[1])?;
     let (_, v_result) = root_mean_squared_error_simple(&first[2], &second[2])?;
 
-    let (_, alpha_result) = ssim_simple(&first[3], &second[3])?;
+    let (_, alpha_result) = root_mean_squared_error_simple(&first[3], &second[3])?;
 
     let results = [mssim_result, u_result, v_result, alpha_result];
 
@@ -120,11 +135,9 @@ pub fn rgb_hybrid_compare(first: &RgbImage, second: &RgbImage) -> Result<Similar
 
     let first_channels = first.split_to_yuv();
     let second_channels = second.split_to_yuv();
-    let (_, mssim_result) = ssim::ssim_simple(&first_channels[0], &second_channels[0])?;
-    let (_, u_result) =
-        squared_error::root_mean_squared_error_simple(&first_channels[1], &second_channels[1])?;
-    let (_, v_result) =
-        squared_error::root_mean_squared_error_simple(&first_channels[2], &second_channels[2])?;
+    let (_, mssim_result) = ssim_simple(&first_channels[0], &second_channels[0])?;
+    let (_, u_result) = root_mean_squared_error_simple(&first_channels[1], &second_channels[1])?;
+    let (_, v_result) = root_mean_squared_error_simple(&first_channels[2], &second_channels[2])?;
 
     let results = [mssim_result, u_result, v_result];
 

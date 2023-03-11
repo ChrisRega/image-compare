@@ -18,4 +18,4 @@ Feature: RGBA image comparison using hybrid mode - MSSIM for for Y, Alpha channe
       | tests/data/pad_gaprao_noise.png         | 0.13009302571614584   |
       | tests/data/pad_gaprao_gray_inverted.png | 3.256663878758748e-5  |
       | tests/data/pad_gaprao_color_filters.png | 0.9884529947916667    |
-      | tests/data/pad_gaprao_alpha.png         | 0.8729651692708333    |
+      | tests/data/pad_gaprao_alpha.png         | 0.9541552734375    |
