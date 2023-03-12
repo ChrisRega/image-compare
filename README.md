@@ -23,7 +23,7 @@ Neither [memory optimizations](https://actix.vdop.org/view_post?post_num=10) nor
     - As you can see in the gherkin tests this result is not worth it currently, as it takes a lot more time
     - It could be improved, by not just propagating the individual color-score results but using the worst for each pixel
     - This approach is implemented in hybrid-mode, see below
-  - "hybrid comparison"
+  - "Hybrid Comparison"
     - Splitting the image to YUV colorspace according to T.871
     - Processing the Y channel with MSSIM
     - Comparing U and V channels via RMS
@@ -31,11 +31,11 @@ Neither [memory optimizations](https://actix.vdop.org/view_post?post_num=10) nor
     - RGB Score is calculated as: $\mathrm{score}=\mathrm{avg}_{x,y}\left(\mathrm{min}\left[\Delta \mathrm{MSSIM}(Y,x,y),\sqrt{(\Delta RMS(U,x,y))^2 + (\Delta RMS(V,x,y))^2}\right]\right)$
     - For RGBA the $\alpha$ channel is also compared using MSSIM and taken into account.
     - The average alpha of each pixel $\bar{\alpha}(x,y) = 1/2 (\alpha_1(x,y) + \alpha_2(x,y))$ is then used as a linear weighting factor
-    - RGBA Score is calculated as: $\mathrm{score}=\mathrm{avg}_{x,y}\left(\bar{\alpha} \cdot \mathrm{min}\left[\Delta \mathrm{MSSIM}(Y,x,y),\sqrt{(\Delta RMS(U,x,y))^2 + (\Delta RMS(V,x,y))^2}, \Delta \mathrm{MSSIM}(\alpha,x,y)\right]\right)$
+    - RGBA Score is calculated as: $\mathrm{score}=\mathrm{avg}_{x,y}\left(1/\bar{\alpha} \cdot \mathrm{min}\left[\Delta \mathrm{MSSIM}(Y,x,y),\sqrt{(\Delta RMS(U,x,y))^2 + (\Delta RMS(V,x,y))^2}, \Delta \mathrm{MSSIM}(\alpha,x,y)\right]\right)$
     - This allows for a good separation of color differences and structure differences for both RGB and RGBA
     - Interpretation of the diff-images:
       - RGB: Red contains structure differences, Green and Blue the color differences, the more color, the higher the diff
-      - RGBA: Same as RGB but alpha contains the inverse of the alpha-diffs. If something is heavily translucent, the alpha was so different, that differentiating between color and structure difference would be difficult.
+      - RGBA: Same as RGB but alpha contains the inverse of the alpha-diffs. If something is heavily translucent, the alpha was so different, that differentiating between color and structure difference would be difficult. Also, minimum alpha is clamped at 0.1 so you can still see all changes.
 - Comparing grayscale images by histogram
   - Several distance metrics implemented see [OpenCV docs](https://docs.opencv.org/4.5.5/d8/dc8/tutorial_histogram_comparison.html):
     - Correlation $d(H_1,H_2) = \frac{\sum_I (H_1(I) - \bar{H_1}) (H_2(I) - \bar{H_2})}{\sqrt{\sum_I(H_1(I) - \bar{H_1})^2 \sum_I(H_2(I) - \bar{H_2})^2}}$
