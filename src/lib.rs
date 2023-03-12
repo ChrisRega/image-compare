@@ -19,16 +19,43 @@
 //! let image_two = image::open("image2.png").expect("Could not find test-image").into_luma8();
 //! let result = image_compare::gray_similarity_histogram(Metric::Hellinger, &image_one, &image_two).expect("Images had different dimensions");
 //! ```
+//! Check the [`Metric`] enum for implementation details
+//!
 //! # Comparing rgb images using hybrid mode
 //!
-//! Histogram comparisons are possible using the histogram comparison function
+//! hybrid mode allows to decompose the image to structure and color channels (YUV) which
+//! are compared separately but then combined into a common result.
 //! ```no_run
 //! let image_one = image::open("image1.png").expect("Could not find test-image").into_rgb8();
 //! let image_two = image::open("image2.png").expect("Could not find test-image").into_rgb8();
 //! let result = image_compare::rgb_hybrid_compare(&image_one, &image_two).expect("Images had different dimensions");
 //! ```
 //!
-//! Check the [`Metric`] enum for implementation details
+//! # Comparing rgba images using hybrid mode
+//!
+//! hybrid mode allows to decompose the image to structure and color channels (YUVA) which
+//! are compared separately but then combined into a common result.
+//! ```no_run
+//! let image_one = image::open("image1.png").expect("Could not find test-image").into_rgba8();
+//! let image_two = image::open("image2.png").expect("Could not find test-image").into_rgba8();
+//! let result = image_compare::rgba_hybrid_compare(&image_one, &image_two).expect("Images had different dimensions");
+//! ```
+//!
+//! # Using structure results
+//! All structural comparisons return a result struct that contains the similarity score.
+//! For the score 1.0 is perfectly similar, 0.0 is dissimilar and some algorithms even provide up to -1.0 for inverse.
+//! Furthermore, the algorithm may produce a similarity map (MSSIM, RMS and hybrid compare do) that can be evaluated per pixel or converted to a visualization:
+//! ```no_run
+//! let image_one = image::open("image1.png").expect("Could not find test-image").into_rgba8();
+//! let image_two = image::open("image2.png").expect("Could not find test-image").into_rgba8();
+//! let result = image_compare::rgba_hybrid_compare(&image_one, &image_two).expect("Images had different dimensions");
+//! if result.score < 0.95 {
+//!   //we can unwrap here since hybrid compare always produces the result image
+//!   let diff_img = result.image.unwrap().to_color_map();
+//!   diff_img.save("diff_image.png").expect("Could not save diff image");
+//! }
+//! ```
+
 #![warn(missing_docs)]
 #![warn(unused_qualifications)]
 #![deny(deprecated)]
