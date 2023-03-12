@@ -47,7 +47,7 @@ fn merge_similarity_channels_yuva(
             let dev = if alpha_bar > 0. {
                 (min_sim / alpha_bar).clamp(0., 1.)
             } else {
-                0.0
+                1.0
             };
             let alpha_vis = (ALPHA_VIS_MIN + a_d * (1.0 - ALPHA_VIS_MIN)).clamp(0., 1.);
 
