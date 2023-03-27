@@ -31,7 +31,7 @@ Neither [memory optimizations](https://actix.vdop.org/view_post?post_num=10) nor
     - RGB Score is calculated as: $\mathrm{score}=\mathrm{avg}_{x,y}\left(\mathrm{min}\left[\Delta \mathrm{MSSIM}(Y,x,y),\sqrt{(\Delta RMS(U,x,y))^2 + (\Delta RMS(V,x,y))^2}\right]\right)$
     - For RGBA the $\alpha$ channel is also compared using MSSIM and taken into account.
     - The average alpha of each pixel $\bar{\alpha}(x,y) = 1/2 (\alpha_1(x,y) + \alpha_2(x,y))$ is then used as a linear weighting factor
-    - RGBA Score is calculated as: $\mathrm{score}=\mathrm{avg}_{x,y}\left(1/\bar{\alpha} \cdot \mathrm{min}\left[\Delta \mathrm{MSSIM}(Y,x,y),\sqrt{(\Delta RMS(U,x,y))^2 + (\Delta RMS(V,x,y))^2}, \Delta \mathrm{MSSIM}(\alpha,x,y)\right]\right)$
+    - RGBA Score is calculated as: $\mathrm{score}=\mathrm{avg}_{x,y}\left(1/\bar{\alpha} \cdot \mathrm{min}\left[\Delta \mathrm{MSSIM}(Y,x,y),\sqrt{(\Delta RMS(U,x,y))^2 + (\Delta RMS(V,x,y))^2}, \Delta \mathrm{RMS}(\alpha,x,y)\right]\right)$
     - Edge cases RGBA: $\mathrm{score} \in (0, 1)$ and $\mathrm{score} = 1.0$ if $\bar{\alpha} = 0.0$
     - This allows for a good separation of color differences and structure differences for both RGB and RGBA
     - Interpretation of the diff-images:
