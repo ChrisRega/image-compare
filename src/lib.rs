@@ -208,6 +208,9 @@ use crate::ssim::ssim_simple;
 #[doc(inline)]
 pub use hybrid::rgba_hybrid_compare;
 
+#[doc(inline)]
+pub use hybrid::rgba_blended_hybrid_compare;
+
 #[cfg(test)]
 mod tests {
     use super::*;

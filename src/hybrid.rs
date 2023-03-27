@@ -2,7 +2,7 @@ use crate::colorization::{GraySimilarityImage, RGBASimilarityImage, RGBSimilarit
 use crate::prelude::*;
 use crate::squared_error::root_mean_squared_error_simple;
 use crate::ssim::ssim_simple;
-use crate::utils::split_rgba_to_yuva;
+use crate::utils::{blend_alpha, split_rgba_to_yuva};
 use crate::Decompose;
 use image::{Rgba, RgbaImage};
 use itertools::izip;
@@ -118,6 +118,18 @@ pub fn rgba_hybrid_compare(
     Ok(merge_similarity_channels_yuva(
         &results, &first[3], &second[3],
     ))
+}
+
+/// This processes the RGBA images be pre-blending the colors with the desired background color.
+/// It's faster then the full RGBA similarity and more intuitive.
+pub fn rgba_blended_hybrid_compare(
+    first: &RgbaImage,
+    second: &RgbaImage,
+    background: Rgb<u8>,
+) -> Result<Similarity, CompareError> {
+    let first = blend_alpha(first, background);
+    let second = blend_alpha(second, background);
+    rgb_hybrid_compare(&first, &second)
 }
 
 /// Comparing structure via MSSIM on Y channel, comparing color-diff-vectors on U and V summing the squares

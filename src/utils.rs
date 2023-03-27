@@ -45,6 +45,29 @@ pub(crate) fn split_rgba_to_yuva(source: &RgbaImage) -> [GrayImage; 4] {
     [y, u, v, a]
 }
 
+fn blend(c: u8, a: u8, c_b: u8) -> u8 {
+    let c = c as f32 / 255.;
+    let a = a as f32 / 255.;
+    let c_b = c_b as f32 / 255.;
+    let blended = (c * a) + (c_b * (1. - a));
+    (blended.clamp(0., 1.) * 255.) as u8
+}
+
+pub(crate) fn blend_alpha(image: &RgbaImage, color: Rgb<u8>) -> RgbImage {
+    let mut buffer = ImageBuffer::new(image.width(), image.height());
+
+    for (input, output) in image.pixels().zip(buffer.pixels_mut()) {
+        let [r, g, b, a] = input.0;
+
+        *output = Rgb([
+            blend(r, a, color.0[0]),
+            blend(g, a, color.0[1]),
+            blend(b, a, color.0[2]),
+        ]);
+    }
+    buffer
+}
+
 pub trait Decompose {
     fn split_channels(&self) -> [GrayImage; 3];
     fn split_to_yuv(&self) -> [GrayImage; 3];
@@ -191,6 +214,7 @@ pub fn draw_window_to_image(window: &Window, image: &mut GraySimilarityImage, va
 #[cfg(test)]
 mod tests {
     use super::*;
+    use image::Rgba;
 
     #[test]
     fn window_test() {
@@ -274,5 +298,25 @@ mod tests {
         assert_eq!(black[0], 0.);
         assert_eq!(black[1], 0.);
         assert_eq!(black[2], 0.);
+    }
+
+    #[test]
+    fn blend_test() {
+        // black with white background but no alpha = white
+        assert_eq!(blend(0, 0, 255), 255);
+        // white with black background and full alpha = white
+        assert_eq!(blend(255, 255, 0), 255);
+        // white with black background and no alpha = black
+        assert_eq!(blend(255, 0, 0), 0);
+        // white with black background and half alpha = gray
+        assert_eq!(blend(255, 127, 0), 127);
+    }
+
+    #[test]
+    fn blend_image_test() {
+        let test_image = RgbaImage::from_pixel(2, 2, Rgba([255, 0, 127, 127]));
+        let pre_mult = blend_alpha(&test_image, Rgb([255, 255, 255]));
+        let b_target = 127 + 127 / 2 + 1;
+        assert_eq!(pre_mult.get_pixel(0, 0).0, [255u8, 127u8, b_target]);
     }
 }
