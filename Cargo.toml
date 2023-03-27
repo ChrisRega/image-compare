@@ -16,7 +16,7 @@ description = "Image comparison library based upon the image crate. Currently it
 thiserror = "1.0"
 image = "0.24"
 rayon = "1.7"
-itertools = "0.1"
+itertools = "0.10"
 
 [dev-dependencies]
 cucumber = "0.19"
