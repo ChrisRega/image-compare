@@ -100,6 +100,24 @@ fn compare_hybrid_rgba(world: &mut CompareWorld) {
     );
 }
 
+#[when(expr = "comparing the images using the blended hybrid mode with {string} background")]
+fn compare_hybrid_blended_rgba(world: &mut CompareWorld, color: String) {
+    let background = match color.as_str() {
+        "black" => Rgb([0, 0, 0]),
+        "white" => Rgb([255, 255, 255]),
+        _ => unimplemented!(),
+    };
+
+    world.comparison_result_rgba = Some(
+        image_compare::rgba_blended_hybrid_compare(
+            (&world.first.as_ref().unwrap().clone().into_rgba8()).into(),
+            (&world.second.as_ref().unwrap().clone().into_rgba8()).into(),
+            background,
+        )
+        .expect("Error comparing the two images!"),
+    );
+}
+
 #[when(expr = "comparing the images using the hybrid mode as rgb")]
 fn compare_hybrid_rgb(world: &mut CompareWorld) {
     world.comparison_result_rgb = Some(

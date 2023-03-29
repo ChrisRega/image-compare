@@ -5,12 +5,24 @@ Feature: RGBA image comparison using hybrid mode - MSSIM for for Y, Alpha channe
     When comparing the images using the hybrid mode as rgba
     Then the rgba similarity image matches 'tests/data/colored_primitives_hybrid_compare_rgba.png'
 
-
   Scenario: Comparing two images where one is transparent and one is not
     Given the images 'tests/data/100/hand_white.png' and 'tests/data/100/typed_alpha.png' are loaded
     When comparing the images using the hybrid mode as rgba
     Then the rgba similarity image matches 'tests/data/100/diff_100_hand_alpha.png'
     And the similarity score is 0.00635866355150938
+
+  Scenario: Comparing two images where one is transparent in front of black background
+    Given the images 'tests/data/100/hand_white.png' and 'tests/data/100/typed_alpha.png' are loaded
+    When comparing the images using the blended hybrid mode with 'black' background
+    Then the similarity score is 0.007445383816957474
+
+  Scenario: Comparing two images where one is transparent in front of white background
+    Given the images 'tests/data/100/hand_white.png' and 'tests/data/100/typed_alpha.png' are loaded
+    When comparing the images using the blended hybrid mode with 'white' background
+    Then the similarity score is 0.6302585601806641
+
+
+
 
   Scenario: Comparing two images where both are transparent and similar
     Given the images 'tests/data/100/typed_alpha.png' and 'tests/data/100/typed_color_changed.png' are loaded
