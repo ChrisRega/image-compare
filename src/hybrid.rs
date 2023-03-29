@@ -6,6 +6,7 @@ use crate::utils::{blend_alpha, split_rgba_to_yuva};
 use crate::Decompose;
 use image::{Rgba, RgbaImage};
 use itertools::izip;
+use std::borrow::Cow;
 
 fn merge_similarity_channels_yuva(
     input: &[GraySimilarityImage; 4],
@@ -120,15 +121,44 @@ pub fn rgba_hybrid_compare(
     ))
 }
 
+/// A wrapper class accepting both RgbaImage and RgbImage for the blended hybrid comparison
+pub enum BlendInput<'a> {
+    /// This variant means that the image is already alpha pre-blended and therefore RGB
+    PreBlended(&'a RgbImage),
+    /// This variant means that the image still needs to be blended with a certain background
+    RGBA(&'a RgbaImage),
+}
+
+impl<'a> BlendInput<'a> {
+    fn into_blended(self, background: Rgb<u8>) -> Cow<'a, RgbImage> {
+        match self {
+            BlendInput::PreBlended(image) => Cow::Borrowed(image),
+            BlendInput::RGBA(rgba) => Cow::Owned(blend_alpha(rgba, background)),
+        }
+    }
+}
+
+impl<'a> From<&'a RgbImage> for BlendInput<'a> {
+    fn from(value: &'a RgbImage) -> Self {
+        BlendInput::PreBlended(value)
+    }
+}
+
+impl<'a> From<&'a RgbaImage> for BlendInput<'a> {
+    fn from(value: &'a RgbaImage) -> Self {
+        BlendInput::RGBA(value)
+    }
+}
+
 /// This processes the RGBA images be pre-blending the colors with the desired background color.
 /// It's faster then the full RGBA similarity and more intuitive.
 pub fn rgba_blended_hybrid_compare(
-    first: &RgbaImage,
-    second: &RgbaImage,
+    first: BlendInput,
+    second: BlendInput,
     background: Rgb<u8>,
 ) -> Result<Similarity, CompareError> {
-    let first = blend_alpha(first, background);
-    let second = blend_alpha(second, background);
+    let first = first.into_blended(background);
+    let second = second.into_blended(background);
     rgb_hybrid_compare(&first, &second)
 }
 

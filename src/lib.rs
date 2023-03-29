@@ -25,15 +25,28 @@
 //!
 //! hybrid mode allows to decompose the image to structure and color channels (YUV) which
 //! are compared separately but then combined into a common result.
+//! ## Direct usage on two RGB8 images
 //! ```no_run
 //! let image_one = image::open("image1.png").expect("Could not find test-image").into_rgb8();
 //! let image_two = image::open("image2.png").expect("Could not find test-image").into_rgb8();
 //! let result = image_compare::rgb_hybrid_compare(&image_one, &image_two).expect("Images had different dimensions");
 //! ```
 //!
-//! # Comparing rgba images using hybrid mode
+//! ## Compare the similarity of two maybe-rgba images in front a given background color
+//! If an image is RGBA it will be blended with a background of the given color.
+//! RGB images will not be modified.
 //!
-//! hybrid mode allows to decompose the image to structure and color channels (YUVA) which
+//! ```no_run
+//! use image::Rgb;
+//! let image_one = image::open("image1.png").expect("Could not find test-image").into_rgba8();
+//! let image_two = image::open("image2.png").expect("Could not find test-image").into_rgb8();
+//! let white = Rgb([255,255,255]);
+//! let result = image_compare::rgba_blended_hybrid_compare((&image_one).into(), (&image_two).into(), white).expect("Images had different dimensions");
+//! ```
+//!
+//! # Comparing two RGBA8 images using hybrid mode
+//!
+//! hybrid mode allows to decompose the image to structure, color and alpha channels (YUVA) which
 //! are compared separately but then combined into a common result.
 //! ```no_run
 //! let image_one = image::open("image1.png").expect("Could not find test-image").into_rgba8();
@@ -210,6 +223,8 @@ pub use hybrid::rgba_hybrid_compare;
 
 #[doc(inline)]
 pub use hybrid::rgba_blended_hybrid_compare;
+
+pub use hybrid::BlendInput;
 
 #[cfg(test)]
 mod tests {
