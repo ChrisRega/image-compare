@@ -89,7 +89,7 @@ pub struct Similarity {
     /// - RMS will be between 0. for all-white vs all-black and 1.0 for identical
     /// - SSIM usually is near 1. for similar, near 0. for different but can take on negative values for negative covariances
     /// - Hybrid mode will be inverse: 0. means no difference, 1.0 is maximum difference. For details see [`crate::hybrid::rgb_hybrid_compare`]    
-    pub image: Option<SimilarityImage>,
+    pub image: SimilarityImage,
     /// the average score of the image
     pub score: f64,
 }

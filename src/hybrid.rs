@@ -59,7 +59,7 @@ fn merge_similarity_channels_yuva(
 
     let score = deviation.iter().sum::<f32>() as f64 / deviation.len() as f64;
     Similarity {
-        image: Some(image.into()),
+        image: image.into(),
         score,
     }
 }
@@ -87,7 +87,7 @@ fn merge_similarity_channels_yuv(input: &[GraySimilarityImage; 3]) -> Similarity
 
     let score = deviation.iter().sum::<f32>() as f64 / deviation.len() as f64;
     Similarity {
-        image: Some(image.into()),
+        image: image.into(),
         score,
     }
 }

@@ -62,7 +62,7 @@ fn compare_hist_corr(world: &mut CompareWorld, metric: String) {
             &world.second.as_ref().unwrap().clone().into_luma8(),
         )
         .expect("Error comparing the two images!"),
-        image: None,
+        image: GraySimilarityImage::new(0, 0).into(),
     });
 }
 
@@ -149,8 +149,6 @@ fn check_result_image(world: &mut CompareWorld, reference: String) {
         .as_ref()
         .unwrap()
         .image
-        .as_ref()
-        .unwrap()
         .to_color_map()
         .into_luma8();
     let image_one = image::open(reference)
@@ -171,8 +169,6 @@ fn check_result_image_rgba(world: &mut CompareWorld, reference: String) {
         .as_ref()
         .unwrap()
         .image
-        .as_ref()
-        .unwrap()
         .to_color_map()
         .into_rgba8();
     let image_one = image::open(reference)
@@ -193,8 +189,6 @@ fn check_result_image_rgb(world: &mut CompareWorld, reference: String) {
         .as_ref()
         .unwrap()
         .image
-        .as_ref()
-        .unwrap()
         .to_color_map()
         .into_rgb8();
     let image_one = image::open(reference)

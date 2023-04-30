@@ -63,8 +63,7 @@
 //! let image_two = image::open("image2.png").expect("Could not find test-image").into_rgba8();
 //! let result = image_compare::rgba_hybrid_compare(&image_one, &image_two).expect("Images had different dimensions");
 //! if result.score < 0.95 {
-//!   //we can unwrap here since hybrid compare always produces the result image
-//!   let diff_img = result.image.unwrap().to_color_map();
+//!   let diff_img = result.image.to_color_map();
 //!   diff_img.save("diff_image.png").expect("Could not save diff image");
 //! }
 //! ```
@@ -101,6 +100,9 @@ pub mod prelude {
         CalculationFailed(String),
     }
 
+    pub use crate::colorization::GraySimilarityImage;
+    pub use crate::colorization::RGBASimilarityImage;
+    pub use crate::colorization::RGBSimilarityImage;
     pub use crate::colorization::Similarity;
 }
 
@@ -138,7 +140,7 @@ pub fn gray_similarity_structure(
         Algorithm::MSSIMSimple => ssim_simple(first, second),
     }
     .map(|(score, i)| Similarity {
-        image: Some(i.into()),
+        image: i.into(),
         score,
     })
 }
@@ -189,7 +191,7 @@ pub fn rgb_similarity_structure(
     let image = utils::merge_similarity_channels(&input.try_into().unwrap());
     let score = results.iter().map(|(s, _)| *s).fold(1., f64::min);
     Ok(Similarity {
-        image: Some(image.into()),
+        image: image.into(),
         score,
     })
 }
