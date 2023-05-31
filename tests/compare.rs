@@ -9,8 +9,9 @@ extern crate image;
 pub struct CompareWorld {
     first: Option<DynamicImage>,
     second: Option<DynamicImage>,
-    comparison_result: Option<GraySimilarity>,
-    comparison_result_rgb: Option<RGBSimilarity>,
+    comparison_result: Option<Similarity>,
+    comparison_result_rgb: Option<Similarity>,
+    comparison_result_rgba: Option<Similarity>,
 }
 
 #[given(expr = "the images {string} and {string} are loaded")]
@@ -54,14 +55,14 @@ fn compare_hist_corr(world: &mut CompareWorld, metric: String) {
         "hellinger distance" => Metric::Hellinger,
         _ => panic!(),
     };
-    world.comparison_result = Some(GraySimilarity {
+    world.comparison_result = Some(Similarity {
         score: image_compare::gray_similarity_histogram(
             metric,
             &world.first.as_ref().unwrap().clone().into_luma8(),
             &world.second.as_ref().unwrap().clone().into_luma8(),
         )
         .expect("Error comparing the two images!"),
-        image: GraySimilarityImage::new(1, 1),
+        image: GraySimilarityImage::new(0, 0).into(),
     });
 }
 
@@ -88,6 +89,34 @@ fn compare_mssim_rgb(world: &mut CompareWorld) {
         .expect("Error comparing the two images!"),
     );
 }
+#[when(expr = "comparing the images using the hybrid mode as rgba")]
+fn compare_hybrid_rgba(world: &mut CompareWorld) {
+    world.comparison_result_rgba = Some(
+        image_compare::rgba_hybrid_compare(
+            &world.first.as_ref().unwrap().clone().into_rgba8(),
+            &world.second.as_ref().unwrap().clone().into_rgba8(),
+        )
+        .expect("Error comparing the two images!"),
+    );
+}
+
+#[when(expr = "comparing the images using the blended hybrid mode with {string} background")]
+fn compare_hybrid_blended_rgba(world: &mut CompareWorld, color: String) {
+    let background = match color.as_str() {
+        "black" => Rgb([0, 0, 0]),
+        "white" => Rgb([255, 255, 255]),
+        _ => unimplemented!(),
+    };
+
+    world.comparison_result_rgba = Some(
+        image_compare::rgba_blended_hybrid_compare(
+            (&world.first.as_ref().unwrap().clone().into_rgba8()).into(),
+            (&world.second.as_ref().unwrap().clone().into_rgba8()).into(),
+            background,
+        )
+        .expect("Error comparing the two images!"),
+    );
+}
 
 #[when(expr = "comparing the images using the hybrid mode as rgb")]
 fn compare_hybrid_rgb(world: &mut CompareWorld) {
@@ -106,6 +135,8 @@ fn check_result_score(world: &mut CompareWorld, score: f64) {
         assert_eq!(world.comparison_result.as_ref().unwrap().score, score);
     } else if world.comparison_result_rgb.is_some() {
         assert_eq!(world.comparison_result_rgb.as_ref().unwrap().score, score);
+    } else if world.comparison_result_rgba.is_some() {
+        assert_eq!(world.comparison_result_rgba.as_ref().unwrap().score, score);
     } else {
         panic!("No result calculated yet")
     }
@@ -118,12 +149,33 @@ fn check_result_image(world: &mut CompareWorld, reference: String) {
         .as_ref()
         .unwrap()
         .image
-        .to_grayscale();
+        .to_color_map()
+        .into_luma8();
     let image_one = image::open(reference)
         .expect("Could not find reference-image")
         .into_luma8();
     assert_eq!(
         image_compare::gray_similarity_structure(&Algorithm::RootMeanSquared, &img, &image_one)
+            .expect("Could not compare")
+            .score,
+        1.0
+    );
+}
+
+#[then(expr = "the rgba similarity image matches {string}")]
+fn check_result_image_rgba(world: &mut CompareWorld, reference: String) {
+    let img = world
+        .comparison_result_rgba
+        .as_ref()
+        .unwrap()
+        .image
+        .to_color_map()
+        .into_rgba8();
+    let image_one = image::open(reference)
+        .expect("Could not find reference-image")
+        .into_rgba8();
+    assert_eq!(
+        image_compare::rgba_hybrid_compare(&img, &image_one)
             .expect("Could not compare")
             .score,
         1.0
@@ -137,7 +189,8 @@ fn check_result_image_rgb(world: &mut CompareWorld, reference: String) {
         .as_ref()
         .unwrap()
         .image
-        .to_color_map();
+        .to_color_map()
+        .into_rgb8();
     let image_one = image::open(reference)
         .expect("Could not find reference-image")
         .into_rgb8();
@@ -155,4 +208,5 @@ async fn main() {
     CompareWorld::run("tests/features/histogram_gray.feature").await;
     CompareWorld::run("tests/features/structure_rgb.feature").await;
     CompareWorld::run("tests/features/hybrid_rgb.feature").await;
+    CompareWorld::run("tests/features/hybrid_rgba.feature").await;
 }
