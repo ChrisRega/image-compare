@@ -49,6 +49,8 @@ Neither [memory optimizations](https://actix.vdop.org/view_post?post_num=10) nor
     - RGBA: Same as RGB but alpha contains the inverse of the alpha-diffs. If something is heavily translucent, the alpha was so different, that differentiating between color and structure difference would be difficult. Also, minimum alpha is clamped at 0.1, so you can still see all changes.
 
 Changelog:
+0.3.1:
+- Remove additional dependencies from image-rs, making this library more lean (Thanks @ericseppanen)
 0.3.0:
 - An error was found in hybrid RGB compare in 0.2.x that over-weighted color differences. Numbers in tests were adjusted
   - Influence was very small for most images but noticeable for the color-filtered one which yields much higher similarity now
