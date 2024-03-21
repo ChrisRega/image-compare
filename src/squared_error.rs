@@ -1,4 +1,3 @@
-use crate::colorization::GraySimilarityImage;
 use crate::prelude::*;
 use itertools::izip;
 

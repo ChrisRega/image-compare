@@ -1,6 +1,5 @@
-use crate::colorization::{GraySimilarityImage, RGBSimilarityImage};
 use crate::prelude::*;
-use image::{GrayImage, RgbaImage};
+use image::RgbaImage;
 use itertools::izip;
 
 /// see https://www.itu.int/rec/T-REC-T.871

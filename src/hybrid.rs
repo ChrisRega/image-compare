@@ -1,4 +1,3 @@
-use crate::colorization::{GraySimilarityImage, RGBASimilarityImage, RGBSimilarityImage};
 use crate::prelude::*;
 use crate::squared_error::root_mean_squared_error_simple;
 use crate::ssim::ssim_simple;

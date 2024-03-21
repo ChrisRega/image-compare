@@ -1,4 +1,3 @@
-use crate::colorization::GraySimilarityImage;
 use crate::prelude::*;
 use crate::utils::{draw_window_to_image, Window};
 use rayon::prelude::*;

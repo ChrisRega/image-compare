@@ -8,6 +8,7 @@ pub type RGBSimilarityImage = ImageBuffer<Rgb<f32>, Vec<f32>>;
 pub type RGBASimilarityImage = ImageBuffer<Rgba<f32>, Vec<f32>>;
 
 #[derive(Debug)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum SimilarityImage {
     Gray(GraySimilarityImage),
     RGB(RGBSimilarityImage),
