@@ -13,6 +13,8 @@ fn merge_similarity_channels_yuva(
     alpha_second: &GrayImage,
 ) -> Similarity {
     const ALPHA_VIS_MIN: f32 = 0.1;
+    const U8_MAX: f32 = u8::MAX as f32;
+    const A_BAR_NORM: f32 = 2. * U8_MAX;
 
     let mut image = RGBASimilarityImage::new(input[0].width(), input[0].height());
     let mut deviation = Vec::new();
@@ -33,7 +35,7 @@ fn merge_similarity_channels_yuva(
             let u = u[0].clamp(0.0, 1.0);
             let v = v[0].clamp(0.0, 1.0);
             let a_d = a_d[0].clamp(0.0, 1.0);
-            let alpha_bar = (alpha_source[0] as f32 + alpha_source_second[0] as f32) / (2. * 255.);
+            let alpha_bar = (alpha_source[0] as f32 + alpha_source_second[0] as f32) / A_BAR_NORM;
             let alpha_bar = if alpha_bar.is_finite() {
                 alpha_bar
             } else {
@@ -42,7 +44,7 @@ fn merge_similarity_channels_yuva(
 
             let color_diff = ((u).powi(2) + (v).powi(2)).sqrt().clamp(0.0, 1.0);
             let min_sim = y.min(color_diff).min(a_d);
-            //the lower the alpha the less differences are visible in color and structure (and alpha)
+            //the lower the alpha the fewer differences are visible in color and structure (and alpha)
 
             let dev = if alpha_bar > 0. {
                 (min_sim / alpha_bar).clamp(0., 1.)

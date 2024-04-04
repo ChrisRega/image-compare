@@ -67,12 +67,20 @@ Image comparison in rust based on the image crate
       minimum alpha is clamped at 0.1, so you can still see all changes.
 
 Changelog:
+0.4.1:
+
+- Support for hybrid-compare with images larger than 4096x4096 (Thanks @nikarh)
+
 0.4.0:
 
 - Support for image-rs series 0.25
-  0.3.1:
+
+0.3.1:
+
 - Remove additional dependencies from image-rs, making this library more lean (Thanks @ericseppanen)
-  0.3.0:
+
+0.3.0:
+
 - An error was found in hybrid RGB compare in 0.2.x that over-weighted color differences. Numbers in tests were adjusted
     - Influence was very small for most images but noticeable for the color-filtered one which yields much higher
       similarity now
