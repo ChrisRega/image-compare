@@ -67,6 +67,9 @@ Image comparison in rust based on the image crate
       minimum alpha is clamped at 0.1, so you can still see all changes.
 
 Changelog:
+0.5.0:
+- Added support for custom image types via config
+
 0.4.2:
 - Updated dependencies 
 
