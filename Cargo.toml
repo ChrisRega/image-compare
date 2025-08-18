@@ -27,6 +27,14 @@ image = { version = "0.25", default-features = false, features = ["png"] }
 name = "compare"
 harness = false
 
+[[test]]
+name = "utils"
+harness = false
+
 [profile.release-with-debug]
 inherits = "release"
 debug = true
+
+[features]
+default = []
+yuv_compare = []

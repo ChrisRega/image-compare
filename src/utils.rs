@@ -3,7 +3,7 @@ use image::RgbaImage;
 use itertools::izip;
 
 /// see https://www.itu.int/rec/T-REC-T.871
-fn rgb_to_yuv(rgb: &[f32; 3]) -> [f32; 3] {
+pub fn rgb_to_yuv(rgb: &[f32; 3]) -> [f32; 3] {
     let py = 0. + (0.299 * rgb[0]) + (0.587 * rgb[1]) + (0.114 * rgb[2]);
     let pu = 128. - (0.168736 * rgb[0]) - (0.331264 * rgb[1]) + (0.5 * rgb[2]);
     let pv = 128. + (0.5 * rgb[0]) - (0.418688 * rgb[1]) - (0.081312 * rgb[2]);
@@ -12,7 +12,7 @@ fn rgb_to_yuv(rgb: &[f32; 3]) -> [f32; 3] {
 
 /// see https://www.itu.int/rec/T-REC-T.871
 #[allow(dead_code)]
-fn yuv_to_rgb(yuv: &[f32; 3]) -> [f32; 3] {
+pub fn yuv_to_rgb(yuv: &[f32; 3]) -> [f32; 3] {
     let r = yuv[0] + (1.402 * (yuv[2] - 128.));
     let g = yuv[0] - (0.344136 * (yuv[1] - 128.)) - (0.714136 * (yuv[2] - 128.));
     let b = yuv[0] + (1.772 * (yuv[1] - 128.));
@@ -67,8 +67,11 @@ pub(crate) fn blend_alpha(image: &RgbaImage, color: Rgb<u8>) -> RgbImage {
     buffer
 }
 
+/// Holds methods to split an RgbImage into arrays of channels
 pub trait Decompose {
+    /// Returns an array containing 3 `GrayImage`s where each channel represents [r, g, b]
     fn split_channels(&self) -> [GrayImage; 3];
+    /// Converts an image to yuv then returns an array containing 3 `GrayImage`s where each channel represents [y, u, v]
     fn split_to_yuv(&self) -> [GrayImage; 3];
 }
 
@@ -113,7 +116,7 @@ impl Decompose for RgbImage {
     }
 }
 
-pub fn merge_similarity_channels(input: &[&GraySimilarityImage; 3]) -> RGBSimilarityImage {
+pub(crate) fn merge_similarity_channels(input: &[&GraySimilarityImage; 3]) -> RGBSimilarityImage {
     let mut output = RGBSimilarityImage::new(input[0].width(), input[0].height());
     izip!(
         input[0].pixels(),
@@ -128,12 +131,12 @@ pub fn merge_similarity_channels(input: &[&GraySimilarityImage; 3]) -> RGBSimila
     output
 }
 
-pub struct Window {
+pub(crate) struct Window {
     pub top_left: (u32, u32),
     pub bottom_right: (u32, u32),
 }
 
-pub struct WindowIter<'a> {
+pub(crate) struct WindowIter<'a> {
     current_index: u32,
     window: &'a Window,
 }
@@ -189,7 +192,7 @@ impl Window {
         result
     }
 
-    pub fn iter_pixels(&self) -> WindowIter {
+    pub fn iter_pixels(&'_ self) -> WindowIter<'_> {
         WindowIter {
             window: self,
             current_index: 0,
@@ -204,7 +207,7 @@ impl Window {
     }
 }
 
-pub fn draw_window_to_image(window: &Window, image: &mut GraySimilarityImage, val: f32) {
+pub(crate) fn draw_window_to_image(window: &Window, image: &mut GraySimilarityImage, val: f32) {
     window
         .iter_pixels()
         .for_each(|current_pixel| image.put_pixel(current_pixel.0, current_pixel.1, Luma([val])));

@@ -77,7 +77,14 @@ mod histogram;
 mod hybrid;
 mod squared_error;
 mod ssim;
+
+
+#[cfg(not(feature="yuv_compare"))] // Tests cannot be implemented to check the functionality of this feature gate, please be mindful of this.
 mod utils;
+
+/// Provides some utilities to make yuv image management and conversion easier.
+#[cfg(feature="yuv_compare")] // Exposes rgb/yuv conversions and split to yuv publicly, others were left to be pub crate or private
+pub mod utils;                // All exposed APIs have tests, and compilation will fail if they ever become non-public
 
 #[doc(hidden)]
 pub mod prelude {
@@ -225,6 +232,10 @@ pub use hybrid::rgba_hybrid_compare;
 
 #[doc(inline)]
 pub use hybrid::rgba_blended_hybrid_compare;
+
+#[doc(inline)]
+#[cfg(feature = "yuv_compare")]
+pub use hybrid::yuv_hybrid_compare;
 
 pub use hybrid::BlendInput;
 

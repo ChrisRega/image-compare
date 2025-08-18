@@ -12,6 +12,7 @@ pub struct CompareWorld {
     comparison_result: Option<Similarity>,
     comparison_result_rgb: Option<Similarity>,
     comparison_result_rgba: Option<Similarity>,
+    comparison_result_yuv: Option<Similarity>,
 }
 
 #[given(expr = "the images {string} and {string} are loaded")]
@@ -129,6 +130,20 @@ fn compare_hybrid_rgb(world: &mut CompareWorld) {
     );
 }
 
+#[cfg(feature = "yuv_compare")]
+#[when(expr = "comparing the images using the hybrid mode as yuv")]
+fn compare_hybrid_yuv(world: &mut CompareWorld) {
+    use image_compare::utils::Decompose;
+
+    world.comparison_result_yuv = Some(
+        image_compare::yuv_hybrid_compare(
+            &world.first.as_ref().unwrap().clone().into_rgb8().split_to_yuv(),
+            &world.second.as_ref().unwrap().clone().into_rgb8().split_to_yuv(),
+        )
+        .expect("Error comparing the two images!"),
+    );
+}
+
 #[then(expr = "the similarity score is {float}")]
 fn check_result_score(world: &mut CompareWorld, score: f64) {
     if world.comparison_result.is_some() {
@@ -137,6 +152,8 @@ fn check_result_score(world: &mut CompareWorld, score: f64) {
         assert_eq!(world.comparison_result_rgb.as_ref().unwrap().score, score);
     } else if world.comparison_result_rgba.is_some() {
         assert_eq!(world.comparison_result_rgba.as_ref().unwrap().score, score);
+    } else if world.comparison_result_yuv.is_some() {
+        assert_eq!(world.comparison_result_yuv.as_ref().unwrap().score, score);
     } else {
         panic!("No result calculated yet")
     }
@@ -182,26 +199,6 @@ fn check_result_image_rgba(world: &mut CompareWorld, reference: String) {
     );
 }
 
-#[then(expr = "the rgb similarity image matches {string}")]
-fn check_result_image_rgb(world: &mut CompareWorld, reference: String) {
-    let img = world
-        .comparison_result_rgb
-        .as_ref()
-        .unwrap()
-        .image
-        .to_color_map()
-        .into_rgb8();
-    let image_one = image::open(reference)
-        .expect("Could not find reference-image")
-        .into_rgb8();
-    assert_eq!(
-        image_compare::rgb_similarity_structure(&Algorithm::RootMeanSquared, &img, &image_one)
-            .expect("Could not compare")
-            .score,
-        1.0
-    );
-}
-
 #[tokio::main]
 async fn main() {
     CompareWorld::run("tests/features/structure_gray.feature").await;
@@ -209,4 +206,6 @@ async fn main() {
     CompareWorld::run("tests/features/structure_rgb.feature").await;
     CompareWorld::run("tests/features/hybrid_rgb.feature").await;
     CompareWorld::run("tests/features/hybrid_rgba.feature").await;
+    #[cfg(feature = "yuv_compare")]
+    CompareWorld::run("tests/features/hybrid_yuv.feature").await;
 }
